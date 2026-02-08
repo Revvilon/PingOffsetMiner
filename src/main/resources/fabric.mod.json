@@ -8,10 +8,10 @@
 		"bubner"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/bubner/PingOffsetMiner",
+		"sources": "https://github.com/bubner/PingOffsetMiner"
 	},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/pingoffsetminer/icon.png",
 	"environment": "*",
 	"entrypoints": {
