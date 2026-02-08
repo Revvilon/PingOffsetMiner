@@ -1,16 +1,41 @@
 package me.bubner.pingoffsetminer;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import me.bubner.pingoffsetminer.util.MiningSpeedCalculator;
 import me.bubner.pingoffsetminer.util.Util;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.RenderStateShard;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
+
+import java.util.OptionalDouble;
+
+import static net.minecraft.client.renderer.RenderStateShard.ITEM_ENTITY_TARGET;
+import static net.minecraft.client.renderer.RenderStateShard.VIEW_OFFSET_Z_LAYERING;
 
 public class BlockTimingOverlay {
+    public static RenderType THICK_LINES = RenderType.create(
+            "pom_lines",
+            1536,
+            RenderPipelines.LINES,
+            RenderType.CompositeState.builder()
+                    .setLineState(new RenderStateShard.LineStateShard(OptionalDouble.of(5)))
+                    .setLayeringState(VIEW_OFFSET_Z_LAYERING)
+                    .setOutputState(ITEM_ENTITY_TARGET)
+                    .createCompositeState(false)
+    );
     private BlockPos currentBlock;
     private double ticksNeeded;
     private boolean timeoutExceeded;
@@ -44,32 +69,34 @@ public class BlockTimingOverlay {
                 if (ticks == -1) return true;
                 ticksNeeded = ticks;
 
-                // TODO: test world
-                PingOffsetMiner.LOGGER.info(blockName);
-                // Using original GL calls from 1.8.9 for simplicity TODO
-//                glPushMatrix();
-//                glEnable(GL_BLEND);
-//                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//                glEnable(GL_LINE_SMOOTH);
-//                glLineWidth(4);
-//                glDisable(GL_TEXTURE_2D);
-//                glEnable(GL_CULL_FACE);
-//                glDisable(GL_DEPTH_TEST);
-//
-//                EntityRenderDispatcher erd = mc.getEntityRenderDispatcher();
-//                Camera camera = erd.camera;
-//                if (camera == null) return true;
-//                Vec3 camPos = camera.getPosition();
-//                glTranslated(-camPos.x, -camPos.y, -camPos.z);
-//                glTranslated(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-//                glColor4f(timeoutExceeded ? 0f : 1f, timeoutExceeded ? 1f : 0f, 0f, 1f);
-//                Util.drawBox();
-//                glColor4f(1f, 1f, 1f, 1f);
-//                glEnable(GL_DEPTH_TEST);
-//                glEnable(GL_TEXTURE_2D);
-//                glDisable(GL_BLEND);
-//                glDisable(GL_LINE_SMOOTH);
-//                glPopMatrix();
+                if (mc.level == null || context.consumers() == null) return true;
+
+                Camera camera = mc.getEntityRenderDispatcher().camera;
+                if (camera == null) return true;
+                Vec3 camPos = camera.getPosition();
+                VoxelShape shape = bs.getShape(mc.level, currentBlock);
+
+                PoseStack poseStack = context.matrices();
+                VertexConsumer buffer = context.consumers().getBuffer(THICK_LINES);
+
+                float red = timeoutExceeded ? 0f : 1f;
+                float green = timeoutExceeded ? 1f : 0f;
+
+                double dx = currentBlock.getX() - camPos.x;
+                double dy = currentBlock.getY() - camPos.y;
+                double dz = currentBlock.getZ() - camPos.z;
+
+                Matrix4f matrix = poseStack.last().pose();
+                shape.forAllEdges((x1, y1, z1, x2, y2, z2) -> {
+                    Vector3f dir = new Vector3f((float) (x2 - x1), (float) (y2 - y1), (float) (z2 - z1))
+                            .normalize();
+                    buffer.addVertex(matrix, (float) (x1 + dx), (float) (y1 + dy), (float) (z1 + dz))
+                            .setColor(red, green, 0, 1)
+                            .setNormal(dir.x, dir.y, dir.z);
+                    buffer.addVertex(matrix, (float) (x2 + dx), (float) (y2 + dy), (float) (z2 + dz))
+                            .setColor(red, green, 0, 1)
+                            .setNormal(dir.x, dir.y, dir.z);
+                });
             }
             // Use our outline
             return false;

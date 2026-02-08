@@ -18,36 +18,54 @@ public class POMSettings {
 
     public static void register(ModConfig config, CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(literal("pom")
-                .then(literal("speed").then(argument("value", DoubleArgumentType.doubleArg(-1))
+                .then(literal("speed")
                         .executes(ctx -> {
-                            double speed = DoubleArgumentType.getDouble(ctx, "value");
-                            config.properties.setProperty("miningSpeed", String.valueOf(speed));
-                            Util.sendMsg("mining speed set to " + speed);
-                            config.save();
+                            double speed = config.getMiningSpeed();
+                            Util.sendMsg("Currently set mining speed: " + (speed == -1 ? "[not set]" : speed));
                             return 1;
-                        })))
-                .then(literal("active").then(argument("value", BoolArgumentType.bool())
+                        })
+                        .then(argument("value", DoubleArgumentType.doubleArg(-1))
+                                .executes(ctx -> {
+                                    double speed = DoubleArgumentType.getDouble(ctx, "value");
+                                    config.properties.setProperty("miningSpeed", String.valueOf(speed));
+                                    Util.sendMsg("Mining speed set to " + speed);
+                                    config.save();
+                                    return 1;
+                                })))
+                .then(literal("active")
                         .executes(ctx -> {
-                            boolean active = BoolArgumentType.getBool(ctx, "value");
-                            config.properties.setProperty("active", String.valueOf(active));
-                            Util.sendMsg(active ? "active!" : "inactive!");
-                            config.save();
+                            Util.sendMsg("Currently active: " + config.getActive());
                             return 1;
-                        })))
-                .then(literal("ping").then(argument("value", DoubleArgumentType.doubleArg(-1))
+                        })
+                        .then(argument("value", BoolArgumentType.bool())
+                                .executes(ctx -> {
+                                    boolean active = BoolArgumentType.getBool(ctx, "value");
+                                    config.properties.setProperty("active", String.valueOf(active));
+                                    Util.sendMsg(active ? "Active!" : "Inactive!");
+                                    config.save();
+                                    return 1;
+                                })))
+                .then(literal("ping")
                         .executes(ctx -> {
-                            double ping = DoubleArgumentType.getDouble(ctx, "value");
-                            config.properties.setProperty("ping", String.valueOf(ping));
-                            Util.sendMsg("ping (ms) set to " + ping);
-                            config.save();
+                            double ping = config.getPing();
+                            Util.sendMsg("Currently set ping (ms): " + (ping == -1 ? "[not set]" : ping));
                             return 1;
-                        })))
+                        })
+                        .then(argument("value", DoubleArgumentType.doubleArg(-1))
+                                .executes(ctx -> {
+                                    double ping = DoubleArgumentType.getDouble(ctx, "value");
+                                    config.properties.setProperty("ping", String.valueOf(ping));
+                                    Util.sendMsg("Ping (ms) set to " + ping);
+                                    config.save();
+                                    return 1;
+                                })))
                 .executes(ctx -> {
                     Util.sendMsg(USAGE);
-                    double speed = config.getMiningSpeed();
-                    boolean active = config.getActive();
+                    Util.sendMsg("Currently active: " + config.getActive());
                     double ping = config.getPing();
-                    Util.sendMsg("mining speed: " + (speed == -1 ? "NOT SET" : speed) + ", ping: " + (ping == -1 ? "NOT SET" : ping) + ", active: " + active);
+                    Util.sendMsg("Currently set ping (ms): " + (ping == -1 ? "[not set]" : ping));
+                    double speed = config.getMiningSpeed();
+                    Util.sendMsg("Currently set mining speed: " + (speed == -1 ? "[not set]" : speed));
                     return 1;
                 })
         );

@@ -15,6 +15,7 @@ public class MiningSpeedCalculator {
         // For all intents and purposes, we only care about the blocks most commonly mined and have relevant strength
 
         // Dwarven ores, we just use the vanilla mapping since they are fundamentally the same
+        put("minecraft:obsidian", 500);
         String[] ores = {
                 "minecraft:coal_block",
                 "minecraft:iron_block",
@@ -86,12 +87,11 @@ public class MiningSpeedCalculator {
                 return "skyblock:citrine_gemstone";
             if (block == Blocks.GREEN_STAINED_GLASS || block == Blocks.GREEN_STAINED_GLASS_PANE)
                 return "skyblock:peridot_gemstone";
-            if (block == Blocks.CLAY || block == Blocks.INFESTED_STONE)
+            if (block == Blocks.CLAY || block == Blocks.INFESTED_COBBLESTONE)
                 return "skyblock:tungsten";
             if (block == Blocks.BROWN_TERRACOTTA
                     || block == Blocks.TERRACOTTA
-                    || block == Blocks.RED_SANDSTONE_SLAB
-                    || block == Blocks.RED_SANDSTONE)
+                    || block == Blocks.SMOOTH_RED_SANDSTONE)
                 return "skyblock:umber";
             if (block == Blocks.PACKED_ICE)
                 return "skyblock:glacite";
