@@ -1,23 +1,26 @@
 package me.bubner.pingoffsetminer;
 
-import net.minecraftforge.client.ClientCommandHandler;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
+import me.bubner.pingoffsetminer.commands.POMSettings;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
- * PingOffsetMiner
+ * Ping Offset Miner. Port of the 1.8.9 Forge edition.
  *
- * @author Lucas Bubner, 2024
+ * @author Lucas Bubner, 2026
  */
-@Mod(modid = PingOffsetMiner.MODID, version = PingOffsetMiner.VERSION)
-public class PingOffsetMiner {
-    public static final String MODID = "PingOffsetMiner";
-    public static final String VERSION = "1.2";
+public class PingOffsetMiner implements ClientModInitializer {
+    public static final String MOD_ID = "pingoffsetminer";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    @Mod.EventHandler
-    public void init(FMLInitializationEvent event) {
-        ClientCommandHandler.instance.registerCommand(new Settings());
-        MinecraftForge.EVENT_BUS.register(new BlockTiming());
+    @Override
+    public void onInitializeClient() {
+        final ModConfig MOD_CONFIG = new ModConfig();
+        MOD_CONFIG.load();
+        ClientCommandRegistrationCallback.EVENT.register(((commandDispatcher, registryAccess) ->
+                POMSettings.register(MOD_CONFIG, commandDispatcher)));
+        new BlockTimingOverlay(MOD_CONFIG);
     }
 }

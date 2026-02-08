@@ -1,0 +1,30 @@
+{
+	"schemaVersion": 1,
+	"id": "pingoffsetminer",
+	"version": "${version}",
+	"name": "PingOffsetMiner",
+	"description": "An overlay mod that takes into account ping offset when mining ores in Hypixel Skyblock, allowing for faster mining.",
+	"authors": [
+		"bubner"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/pingoffsetminer/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"client": [
+			"me.bubner.pingoffsetminer.PingOffsetMiner"
+		]
+	},
+	"mixins": [
+	],
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.21.10",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

@@ -1,5 +1,5 @@
 # Ping Offset Miner
-### Forge 1.8.9 Hypixel Skyblock
+### Fabric 1.21.10 Hypixel Skyblock
 ##### Command: /pom
 A mod that takes into account ping offset when mining ores in Hypixel Skyblock, allowing for faster mining in high-ping clients.  
 This mod displays a block overlay on the screen when they can safely move to the next ore, as the server has already registered the block as broken.
