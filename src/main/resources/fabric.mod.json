@@ -1,0 +1,35 @@
+{
+	"schemaVersion": 1,
+	"id": "ping-offset-miner",
+	"version": "${version}",
+	"name": "ping offset miner",
+	"description": "provides visual feedback for gemstone mining",
+	"authors": [
+		"xevalia"
+	],
+	"license": "CC0-1.0",
+	"icon": "assets/ping-offset-miner/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"client": [
+			"pom.v1.PingOffsetMinerClient",
+			"pom.v1.OutlineRenderer"
+		],
+		"fabric-datagen": [
+			"pom.v1.PingOffsetMinerDataGenerator"
+		]
+	},
+	"mixins": [
+		"ping-offset-miner.mixins.json",
+		{
+			"config": "ping-offset-miner.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.18.4",
+		"minecraft": "~1.21.10",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}
