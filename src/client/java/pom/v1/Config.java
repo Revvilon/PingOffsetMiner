@@ -36,4 +36,6 @@ public class Config {
     public static double getMiningSpeed() {
         return Double.parseDouble(properties.getProperty("miningSpeed", "-1.0"));
     }
+
+    public static double getPing() {return Double.parseDouble(properties.getProperty("ping", "-1.0"));}
 }

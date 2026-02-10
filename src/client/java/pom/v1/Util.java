@@ -29,5 +29,5 @@ public class Util {
         } catch (NullPointerException e) {
             return false;
         }
-    };
+    }
 }

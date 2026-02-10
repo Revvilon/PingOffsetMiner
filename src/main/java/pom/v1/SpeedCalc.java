@@ -60,7 +60,7 @@ public class SpeedCalc {
             return "whar";
         }
         return "whar????";
-    };
+    }
 
     public static double getTicksToBreak(int blockHardness, double miningSpeed) {
         if (blockHardness == -1 || miningSpeed == -1)

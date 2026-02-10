@@ -1,6 +1,7 @@
 package pom.v1;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.block.BlockState;
@@ -17,7 +18,6 @@ import net.minecraft.util.shape.VoxelShape;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
-import static pom.v1.PingOffsetMinerClient.pping;
 
 public class OutlineRenderer implements ClientModInitializer {
 
@@ -96,13 +96,13 @@ public class OutlineRenderer implements ClientModInitializer {
                         buffer.vertex(matrix, (float) (maxX + dx), (float) (maxY + dy), (float) (maxZ + dz))
                                 .color(red, green, 0, 1)
                                 .normal(dir.x, dir.y, dir.z);
-                    });;
+                    });
                 }
                 return false;
             }));
 
 
-        ServerTickEvents.END_SERVER_TICK.register(minecraftServer -> {
+        ClientTickEvents.END_WORLD_TICK.register(minecraftServer -> {
             MinecraftClient client = MinecraftClient.getInstance();
 
 
@@ -111,7 +111,7 @@ public class OutlineRenderer implements ClientModInitializer {
 
             int ticksElapsed = client.player.age - startServerTick;
 
-            double pingSec = pping / 1000.0;
+            double pingSec = Config.getPing() / 1000.0;
             double pingOffset = pingSec > 0 && ticksNeeded > 0
                     ? ticksNeeded - pingSec * 20.0
                     : ticksNeeded;

@@ -18,7 +18,7 @@ public class pomSettings {
                 .then(literal("speed")
                         .executes(ctx -> {
                             double speed = Config.getMiningSpeed();
-                            Util.sendMsg("Current mining speed: " + (speed == -1 ? "[not set]" : speed));
+                            Util.sendMsg("Current set mining speed: " + (speed == -1 ? "[not set]" : speed));
                             return 1;
                         })
                         .then(argument("value", DoubleArgumentType.doubleArg(-1))
@@ -29,9 +29,24 @@ public class pomSettings {
                                     config.save();
                                     return 1;
                                 })))
+                .then(literal("ping")
+                        .executes(ctx -> {
+                            double speed = Config.getMiningSpeed();
+                            Util.sendMsg("Set ping: " + (speed == -1 ? "[not set]" : speed));
+                            return 1;
+                        })
+                        .then(argument("value", DoubleArgumentType.doubleArg(-1))
+                                .executes(ctx -> {
+                                    double ping = DoubleArgumentType.getDouble(ctx, "value");
+                                    Config.properties.setProperty("ping", String.valueOf(ping));
+                                    Util.sendMsg("Ping set to  " + ping);
+                                    config.save();
+                                    return 1;
+                                })))
+
                 .then(literal("active")
                         .executes(ctx -> {
-                            Util.sendMsg("Is active: " + Config.getActive());
+                            Util.sendMsg("POM is: " + Config.getActive());
                             return 1;
                         })
                 .then(argument("value", BoolArgumentType.bool())
@@ -47,6 +62,8 @@ public class pomSettings {
                             Util.sendMsg("Active: " + Config.getActive());
                             double speed = Config.getMiningSpeed();
                             Util.sendMsg("Mining speed: " + (speed == -1 ? "[not set]" : speed));
+                            double ping = Config.getPing();
+                            Util.sendMsg("Ping: " + (ping == -1 ? "[not set]" : ping));
                             return 1;
                         }));
     }
