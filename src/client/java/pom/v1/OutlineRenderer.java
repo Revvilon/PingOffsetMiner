@@ -84,8 +84,6 @@ public class OutlineRenderer implements ClientModInitializer {
 
                     );
 
-                    PingOffsetMinerClient.LOGGER.info(String.valueOf(speed()));
-
                     if (ticks == -1) {
                         return true;
                     }
@@ -136,7 +134,7 @@ public class OutlineRenderer implements ClientModInitializer {
 
                     int ticksElapsed = client.player.age - startServerTick;
 
-                    double pingSec = (double) PingOffsetMinerClient.getAverageLatency() / 1000.0;
+                    double pingSec = (double) PingOffsetMinerClient.getAveragePing(10) / 1000.0;
                     double pingOffset = pingSec > 0 && ticksNeeded > 0
                             ? ticksNeeded - pingSec * 20.0
                             : ticksNeeded;
