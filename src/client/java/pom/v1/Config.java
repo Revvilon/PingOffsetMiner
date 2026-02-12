@@ -32,10 +32,4 @@ public class Config {
     public static boolean getActive() {
         return Boolean.parseBoolean(properties.getProperty("active", "true"));
     }
-
-    public static double getMiningSpeed() {
-        return Double.parseDouble(properties.getProperty("miningSpeed", "-1.0"));
-    }
-
-    public static double getPing() {return Double.parseDouble(properties.getProperty("ping", "-1.0"));}
 }

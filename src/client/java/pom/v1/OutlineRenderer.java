@@ -3,13 +3,16 @@ package pom.v1;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -28,10 +31,29 @@ public class OutlineRenderer implements ClientModInitializer {
     private boolean timeoutExceeded;
     private int startServerTick;
 
+    public long time;
+
     @Override
     public void onInitializeClient() {
 
         PingOffsetMinerClient.LOGGER.info("Initialized!");
+
+        AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
+            if (speed() == -1 && (System.currentTimeMillis() - time) >=  5*1000) {
+
+                time = System.currentTimeMillis();
+
+                Util.sendMsg("Mining Speed not found! Please enable in tab widget", Formatting.RED);
+                Util.sendMsg("To enable: /tab -> Stats Widget -> Shown Stats -> Mining Speed", Formatting.RED);
+                Util.sendMsg("This setting must be enabled on all islands", Formatting.RED);
+
+
+
+                return ActionResult.FAIL;
+            }
+            return ActionResult.PASS;
+        });
+
 
             WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register(((worldRenderContext, outlineRenderState) -> {
 
@@ -58,8 +80,12 @@ public class OutlineRenderer implements ClientModInitializer {
                     String blockName = SpeedCalc.getBlockName(bs.getBlock(), blockPos);
                     double ticks = SpeedCalc.getTicksToBreak(
                             SpeedCalc.blockHardness.getOrDefault(blockName, -1),
-                                Config.getMiningSpeed()
+                            speed()
+
                     );
+
+                    PingOffsetMinerClient.LOGGER.info(String.valueOf(speed()));
+
                     if (ticks == -1) {
                         return true;
                     }
@@ -106,17 +132,41 @@ public class OutlineRenderer implements ClientModInitializer {
             MinecraftClient client = MinecraftClient.getInstance();
 
 
+            if (client.player != null) {
 
-            if (client.player == null) return;
+                    int ticksElapsed = client.player.age - startServerTick;
 
-            int ticksElapsed = client.player.age - startServerTick;
+                    double pingSec = (double) PingOffsetMinerClient.getAverageLatency() / 1000.0;
+                    double pingOffset = pingSec > 0 && ticksNeeded > 0
+                            ? ticksNeeded - pingSec * 20.0
+                            : ticksNeeded;
+                    timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset;
 
-            double pingSec = Config.getPing() / 1000.0;
-            double pingOffset = pingSec > 0 && ticksNeeded > 0
-                    ? ticksNeeded - pingSec * 20.0
-                    : ticksNeeded;
-            timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset;
-
+            }
         });
+
+    }
+
+    public double speed() {
+        var network = MinecraftClient.getInstance().getNetworkHandler();
+        if (network == null)  {
+            return -1;
+        }
+
+
+        for (PlayerListEntry entry : network.getPlayerList()) {
+            if (entry.getDisplayName() == null) continue;
+
+            String text = entry.getDisplayName().getString();
+
+            if (text.contains("Mining Speed:") || text.contains("⸕")) {
+                String cleaned = text.replaceAll("[^0-9]", "").replace("⸕", "");
+                if (!cleaned.isEmpty()) {
+                    return Double.parseDouble(cleaned);
+                }
+            }
+        }
+        return -1;
+
     }
 }
