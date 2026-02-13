@@ -1,5 +1,6 @@
 package pom.v1;
 
+import com.ibm.icu.impl.Assert;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
@@ -10,16 +11,25 @@ import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.sound.SoundLoader;
+import net.minecraft.client.sound.SoundSystem;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.profiler.MultiValueDebugSampleLogImpl;
 import net.minecraft.util.shape.VoxelShape;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import pom.v1.modmenu.pomConfig;
+
+import java.awt.*;
 
 
 public class OutlineRenderer implements ClientModInitializer {
@@ -33,13 +43,15 @@ public class OutlineRenderer implements ClientModInitializer {
 
     public long time;
 
+    pomConfig Config = pomConfig.HANDLER.instance();
+
     @Override
     public void onInitializeClient() {
 
         PingOffsetMinerClient.LOGGER.info("Initialized!");
 
         AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
-            if (speed() == -1 && (System.currentTimeMillis() - time) >=  5*1000) {
+            if (speed() == -1 && (System.currentTimeMillis() - time) >=  5*1000 && Config.active) {
 
                 time = System.currentTimeMillis();
 
@@ -59,8 +71,6 @@ public class OutlineRenderer implements ClientModInitializer {
 
                 MinecraftClient mc = MinecraftClient.getInstance();
                 HitResult hr = mc.crosshairTarget;
-
-                if (!Config.getActive()) return true;
 
                 if (hr instanceof BlockHitResult) {
                     BlockPos blockPos = ((BlockHitResult) hr).getBlockPos();
@@ -101,10 +111,11 @@ public class OutlineRenderer implements ClientModInitializer {
                     VoxelShape shape = bs.getOutlineShape(mc.world, currentBlock);
 
                     MatrixStack matrixStack = worldRenderContext.matrices();
-                    VertexConsumer buffer = worldRenderContext.consumers().getBuffer(THICK_LINES);
+                    VertexConsumer buffer = worldRenderContext.consumers().getBuffer(pomConfig.HANDLER.instance().selectedLine.getLayer());
 
-                    float red = timeoutExceeded ? 0f : 1f;
-                    float green = timeoutExceeded ? 1f : 0f;
+                    Color red = timeoutExceeded ? Config.color2 : Config.color1;
+
+
 
                     double dx = currentBlock.getX() - camPos.x;
                     double dy = currentBlock.getY() - camPos.y;
@@ -115,10 +126,10 @@ public class OutlineRenderer implements ClientModInitializer {
                         Vector3f dir = new Vector3f((float) (maxX - minX), (float) (maxY - minY), (float) (maxZ - minZ))
                                 .normalize();
                         buffer.vertex(matrix, (float) (minX + dx), (float) (minY + dy), (float) (minZ + dz))
-                                .color(red, green, 0, 1)
+                                .color(red.getRGB())
                                 .normal(dir.x, dir.y, dir.z);
                         buffer.vertex(matrix, (float) (maxX + dx), (float) (maxY + dy), (float) (maxZ + dz))
-                                .color(red, green, 0, 1)
+                                .color(red.getRGB())
                                 .normal(dir.x, dir.y, dir.z);
                     });
                 }
@@ -134,20 +145,57 @@ public class OutlineRenderer implements ClientModInitializer {
 
                     int ticksElapsed = client.player.age - startServerTick;
 
-                    double pingSec = (double) PingOffsetMinerClient.getAveragePing(10) / 1000.0;
+                    double pingSec = PingOffsetMinerClient.getAverage(10) / 1000.0;
                     double pingOffset = pingSec > 0 && ticksNeeded > 0
-                            ? ticksNeeded - pingSec * 20.0
+                            ? ticksNeeded - pingSec * 20
                             : ticksNeeded;
                     timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset;
 
+                    PingOffsetMinerClient.LOGGER.info(String.valueOf(timeoutExceeded));
+                     PingOffsetMinerClient.LOGGER.info(String.valueOf(PingOffsetMinerClient.tps));
+                PingOffsetMinerClient.LOGGER.info(String.valueOf(PingOffsetMinerClient.getAverage(10)));
+
+
+
+                if (sound && timeoutExceeded && pomConfig.HANDLER.instance().sound) {
+                        sound = false;
+                        SoundEvent useSound = SoundEvent.of(Identifier.of(pomConfig.HANDLER.instance().soundpath));
+                        client.player.playSound(useSound);
+                    }
+                    if (!sound && !timeoutExceeded) sound = true;
+            }
+        });
+
+        ClientTickEvents.END_WORLD_TICK.register(clientWorld -> {
+                    MinecraftClient client = MinecraftClient.getInstance();
+
+
+                    if (client.player != null) {
+
+                        int ticksElapsed = client.player.age - startServerTick;
+
+                        double pingSec = PingOffsetMinerClient.getAverage(10) / 1000.0;
+                        double pingOffset = pingSec > 0 && ticksNeeded > 0
+                                ? ticksNeeded - pingSec * (20 * (20 / PingOffsetMinerClient.tps))
+                                : ticksNeeded;
+                        timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset;
+
+
+                        if (sound && timeoutExceeded && pomConfig.HANDLER.instance().sound && client.mouse.wasLeftButtonClicked()) {
+                            sound = false;
+                            SoundEvent useSound = SoundEvent.of(Identifier.of(pomConfig.HANDLER.instance().soundpath));
+                            client.player.playSound(useSound);
+                        }
+                        if (!sound && !timeoutExceeded) sound = true;
             }
         });
 
     }
+    private boolean sound = false;
 
     public double speed() {
         var network = MinecraftClient.getInstance().getNetworkHandler();
-        if (network == null)  {
+        if (network == null || !pomConfig.HANDLER.instance().active)  {
             return -1;
         }
 

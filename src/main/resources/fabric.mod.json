@@ -17,12 +17,16 @@
 		],
 		"fabric-datagen": [
 			"pom.v1.PingOffsetMinerDataGenerator"
+		],
+		"modmenu": [
+			"pom.v1.modmenu.ModMenuIntergration"
 		]
 	},
 	"mixins": [
 		"ping-offset-miner.mixins.json"
 	],
 	"depends": {
+		"yet_another_config_lib_v3": ">=3.8.2+1.21.10",
 		"fabricloader": ">=0.18.4",
 		"minecraft": "~1.21.10",
 		"java": ">=21",
