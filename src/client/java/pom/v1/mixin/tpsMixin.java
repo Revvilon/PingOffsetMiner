@@ -3,11 +3,10 @@ package pom.v1.mixin;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import pom.v1.PingOffsetMinerClient;
+import pom.v1.Util;
 
 @Mixin(ClientPlayNetworkHandler.class)
 public class tpsMixin {
@@ -27,7 +26,7 @@ public class tpsMixin {
             if (timeDiff > 0 && tickDiff > 0) {
                 double tps = ( (double) tickDiff / (double) timeDiff) * 1000.0;
 
-                PingOffsetMinerClient.tps = Math.min(estTps, tps);
+                Util.tps = Math.min(estTps, tps);
             }
 
         }

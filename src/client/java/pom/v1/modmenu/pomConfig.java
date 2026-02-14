@@ -34,7 +34,19 @@ public class pomConfig {
     public boolean sound = false;
 
     @SerialEntry
-    public String soundpath = "path";
+    public String soundpath = "";
+
+    @SerialEntry
+    public boolean debug = false;
+
+    @SerialEntry
+    public double speed = 0.0;
+
+    @SerialEntry
+    public double ping = 0.0;
+
+    @SerialEntry
+    public boolean extra = true;
 
     @SerialEntry
     public line selectedLine = line.ThinLine;
