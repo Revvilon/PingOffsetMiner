@@ -11,6 +11,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.awt.*;
+import java.util.HashMap;
 
 public class pomConfig {
     public static ConfigClassHandler<pomConfig> HANDLER = ConfigClassHandler.createBuilder(pomConfig.class)
@@ -49,13 +50,18 @@ public class pomConfig {
     public boolean extra = true;
 
     @SerialEntry
+    public HashMap<String, Boolean> blockEnabled = new HashMap<String, Boolean>() {};
+
+    @SerialEntry
+    public boolean ability = true;
+
+    @SerialEntry
     public line selectedLine = line.ThinLine;
 
     public enum line implements NameableEnum {
         ThinLine(RenderLayer.LINES, "Thin lines"),
         StrippedLines(RenderLayer.LINE_STRIP, "Triangular lines"),
         ThickLine(RenderLayer.SECONDARY_BLOCK_OUTLINE, "Thick lines");
-
 
         private final Text name;
         private final RenderLayer layer;
@@ -73,6 +79,7 @@ public class pomConfig {
         public Text getDisplayName() {
             return name;
         }
+
     };
 
     public static void init() {

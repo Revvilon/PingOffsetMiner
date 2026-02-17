@@ -58,9 +58,7 @@ public class Util {
             if (text.contains("Mining Speed:") || text.contains("⸕")) {
                 String cleaned = text.replaceAll("[^0-9]", "").replace("⸕", "");
                 if (!cleaned.isEmpty()) {
-                    double parsed = Double.parseDouble(cleaned);
-                    parsed = pomConfig.HANDLER.instance().extra ? (parsed + 855) : parsed;
-                    return parsed;
+                    return Double.parseDouble(cleaned);
                 }
             }
         }
@@ -97,5 +95,5 @@ public class Util {
         return count > 0 ? (double) total / count : 0;
     }
 
-    public static double tps = 0;
+    public static double tps = 20;
 }

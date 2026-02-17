@@ -18,7 +18,7 @@
 			"pom.v1.PingOffsetMinerDataGenerator"
 		],
 		"modmenu": [
-			"pom.v1.modmenu.ModMenuIntergration"
+			"pom.v1.modmenu.ModMenuIntegration"
 		]
 	},
 	"mixins": [
