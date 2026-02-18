@@ -1,5 +1,6 @@
 package pom.v1;
 
+import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
@@ -9,6 +10,7 @@ import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -22,8 +24,10 @@ import org.joml.Vector3f;
 import pom.v1.modmenu.pomConfig;
 
 import java.awt.*;
+import java.util.HashMap;
 
-public class OutlineRenderer {
+
+public class OutlineRenderer implements ClientModInitializer {
 
 
     private BlockPos currentBlock;
@@ -34,7 +38,9 @@ public class OutlineRenderer {
     public long lastSent = 0L;
 
     pomConfig Config = pomConfig.HANDLER.instance();
-    public OutlineRenderer() {
+
+    @Override
+    public void onInitializeClient() {
         PingOffsetMinerClient.LOGGER.info("Initialized!");
 
 
@@ -43,11 +49,11 @@ public class OutlineRenderer {
                 lastSent = System.currentTimeMillis();
                 if (Config.debug && !Config.active && !Util.getIsland()) return ActionResult.PASS;
                 if (Util.speed() == -1 && !Config.debug && Config.active && Util.getIsland()) {
-                    Util.sendMsg("Mining Speed not found! Please enable in tab widget", Formatting.RED);
-                    Util.sendMsg("To enable: /tab -> Stats Widget -> Shown Stats -> Mining Speed", Formatting.RED);
+                    Util.sendMsg(Text.literal("Mining Speed not found! Please enable in tab widget"));
+                    Util.sendMsg(Text.literal("To enable: /tab -> Stats Widget -> Shown Stats -> Mining Speed"));
                 }
                 if (Util.tps <= 0) {
-                    Util.sendMsg("Tps not found! Please wait a little bit", Formatting.RED);
+                    Util.sendMsg(Text.literal("Tps not found! Please wait a little bit"));
                 }
 
                 return ActionResult.FAIL;
@@ -56,7 +62,11 @@ public class OutlineRenderer {
         });
 
         WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((worldRenderContext, outline) -> {
-            if (!Util.getIsland() && !Config.debug) return true;
+            long time = System.currentTimeMillis();
+            if (!Util.getIsland() && !Config.debug) {
+                log("Island not found!", time);
+                return true;
+            };
             MinecraftClient mc = MinecraftClient.getInstance();
             HitResult hr = mc.crosshairTarget;
 
@@ -64,18 +74,22 @@ public class OutlineRenderer {
                 BlockPos blockPos = ((BlockHitResult) hr).getBlockPos();
                 if (!Config.active) {
                     ticksNeeded = -1;
+                    log("Not active!", time);
                     return true;
                 }
 
                 if (!blockPos.equals(currentBlock) || !mc.options.attackKey.isPressed()) {
                     timeoutExceeded = false;
+                    ticksNeeded = -1;
                     currentBlock = blockPos;
 
                     if (mc.player != null) startServerTick = mc.player.age;
                 }
 
-                if (currentBlock == null || mc.world == null || worldRenderContext.consumers() == null) return true;
-
+                if (currentBlock == null || mc.world == null || worldRenderContext.consumers() == null) {
+                    log("Block, World or RenderContext is null!", time);
+                    return true;
+                };
 
                 BlockState bs = mc.world.getBlockState(currentBlock);
                 String blockName = SpeedCalc.getBlockName(bs.getBlock(), blockPos);
@@ -86,11 +100,22 @@ public class OutlineRenderer {
 
                 );
 
-                if (ticks == -1) return true;
+                if (!Config.blockEnabled.getOrDefault(blockName, false)) {
+                    log("Block not enabled!", time);
+                    return true;
+                }
+
+                if (ticks == -1) {
+                    log("Ticks needed is null!", time);
+                    return true;
+                };
                 ticksNeeded = ticks;
 
                 Camera camera = mc.getEntityRenderDispatcher().camera;
-                if (camera == null) return true;
+                if (camera == null) {
+                    log("Camera is null!", time);
+                    return true;
+                }
                 Vec3d camPos = camera.getPos();
                 VoxelShape shape = bs.getOutlineShape(mc.world, currentBlock);
 
@@ -98,14 +123,13 @@ public class OutlineRenderer {
                 VertexConsumer buffer = worldRenderContext.consumers().getBuffer(Config.selectedLine.getLayer());
                 Color red = timeoutExceeded ? Config.color2 : Config.color1;
 
-
-
                 double dx = currentBlock.getX() - camPos.x;
                 double dy = currentBlock.getY() - camPos.y;
                 double dz = currentBlock.getZ() - camPos.z;
 
 
                 Matrix4f matrix = matrixStack.peek().getPositionMatrix();
+
                 shape.forEachEdge((minX, minY, minZ, maxX, maxY, maxZ) -> {
                     Vector3f dir = new Vector3f((float) (maxX - minX), (float) (maxY - minY), (float) (maxZ - minZ))
                             .normalize();
@@ -117,7 +141,9 @@ public class OutlineRenderer {
                             .normal(dir.x, dir.y, dir.z);
                 });
             }
+            log("Rendering outlines now!", time);
             return false;
+
         });
         ClientTickEvents.END_CLIENT_TICK.register(clientWorld -> {
             MinecraftClient client = MinecraftClient.getInstance();
@@ -145,11 +171,13 @@ public class OutlineRenderer {
 
     public boolean sound = false;
 
+    HashMap<String, Long> logs = new HashMap<String, Long>();
 
-
-    private void log(String text) {
-        PingOffsetMinerClient.LOGGER.info(text);
+    private void log(String text, Long time) {
+        if (!Config.logging) return;
+        logs.putIfAbsent(text, 10001L);
+        if ((System.currentTimeMillis() - logs.get(text)) <= 10000) return;
+        Util.sendMsg(Text.literal(text).formatted(Formatting.RED, Formatting.BOLD));
+        logs.replace(text, time);
     }
-
-
 }

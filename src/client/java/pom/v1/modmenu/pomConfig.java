@@ -56,6 +56,9 @@ public class pomConfig {
     public boolean ability = true;
 
     @SerialEntry
+    public boolean logging = false;
+
+    @SerialEntry
     public line selectedLine = line.ThinLine;
 
     public enum line implements NameableEnum {

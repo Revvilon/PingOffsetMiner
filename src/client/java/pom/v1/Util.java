@@ -3,6 +3,7 @@ package pom.v1;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.DebugHud;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.profiler.MultiValueDebugSampleLogImpl;
@@ -10,14 +11,14 @@ import pom.v1.modmenu.pomConfig;
 
 public class Util {
 
-    public static void sendMsg(String message, Formatting type) {
+    public static void sendMsg(MutableText message) {
         MinecraftClient mc = MinecraftClient.getInstance();
 
         Text text = Text.literal("")
                 .append(Text.literal("[").formatted(Formatting.WHITE))
                 .append(Text.literal("POM").formatted(Formatting.AQUA))
                 .append(Text.literal("] ").formatted(Formatting.WHITE))
-                .append(Text.literal(message).formatted(type));
+                .append(message);
 
         if (mc.player == null) return;
 
@@ -41,6 +42,8 @@ public class Util {
         return false;
     }
 
+    private static double speed = -1;
+
     public static double speed() {
         var network = MinecraftClient.getInstance().getNetworkHandler();
         if (!pomConfig.HANDLER.instance().active)  {
@@ -58,8 +61,9 @@ public class Util {
             if (text.contains("Mining Speed:") || text.contains("⸕")) {
                 String cleaned = text.replaceAll("[^0-9]", "").replace("⸕", "");
                 if (!cleaned.isEmpty()) {
+                    speed = Double.parseDouble(cleaned);
                     return Double.parseDouble(cleaned);
-                }
+                } return speed;
             }
         }
         return -1;

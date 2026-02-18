@@ -12,7 +12,8 @@
 	"environment": "*",
 	"entrypoints": {
 		"client": [
-			"pom.v1.PingOffsetMinerClient"
+			"pom.v1.PingOffsetMinerClient",
+			"pom.v1.OutlineRenderer"
 		],
 		"fabric-datagen": [
 			"pom.v1.PingOffsetMinerDataGenerator"
