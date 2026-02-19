@@ -42,8 +42,6 @@ public class Util {
         return false;
     }
 
-    private static double speed = -1;
-
     public static double speed() {
         var network = MinecraftClient.getInstance().getNetworkHandler();
         if (!pomConfig.HANDLER.instance().active)  {
@@ -58,12 +56,11 @@ public class Util {
 
             String text = entry.getDisplayName().getString();
 
-            if (text.contains("Mining Speed:") || text.contains("⸕")) {
+            if (text.contains("Mining Speed:") && text.contains("⸕")) {
                 String cleaned = text.replaceAll("[^0-9]", "").replace("⸕", "");
                 if (!cleaned.isEmpty()) {
-                    speed = Double.parseDouble(cleaned);
                     return Double.parseDouble(cleaned);
-                } return speed;
+                }
             }
         }
         return -1;

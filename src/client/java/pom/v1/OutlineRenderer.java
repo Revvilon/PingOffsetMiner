@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.render.VertexConsumer;
@@ -21,29 +22,34 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pom.v1.modmenu.pomConfig;
 
 import java.awt.*;
 import java.util.HashMap;
+import java.util.Objects;
 
 
 public class OutlineRenderer implements ClientModInitializer {
 
-
+    // Initialize variables
     private BlockPos currentBlock;
-    private double ticksNeeded;
+    private double ticksNeeded = -1;
     private boolean timeoutExceeded;
     private int startServerTick;
+    public HitResult hr;
 
     public long lastSent = 0L;
 
+    // Config handler
     pomConfig Config = pomConfig.HANDLER.instance();
 
     @Override
     public void onInitializeClient() {
         PingOffsetMinerClient.LOGGER.info("Initialized!");
 
-
+        // Send message to player
         AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
             if ((System.currentTimeMillis() - lastSent) >= 10000) {
                 lastSent = System.currentTimeMillis();
@@ -61,15 +67,28 @@ public class OutlineRenderer implements ClientModInitializer {
             return ActionResult.PASS;
         });
 
+        ClientTickEvents.START_CLIENT_TICK.register(client -> {
+            // Failsafe to see if currently looking at block
+            // Can't do this inside of BEFORE_BLOCK_OUTLINE since it already assumes looking at block
+            hr = client.crosshairTarget;
+            if (hr != null && hr.getType() == HitResult.Type.MISS) {
+                ticksNeeded = 0;
+                sound = false;
+                currentBlock = null;
+                log("HitResult: " + hr.getType(), System.currentTimeMillis());
+            }
+        });
+        // Outline rendering
         WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((worldRenderContext, outline) -> {
             long time = System.currentTimeMillis();
+
+            // Get island
             if (!Util.getIsland() && !Config.debug) {
                 log("Island not found!", time);
                 return true;
             };
             MinecraftClient mc = MinecraftClient.getInstance();
-            HitResult hr = mc.crosshairTarget;
-
+            if (hr == null) return true;
             if (hr instanceof BlockHitResult) {
                 BlockPos blockPos = ((BlockHitResult) hr).getBlockPos();
                 if (!Config.active) {
@@ -78,6 +97,7 @@ public class OutlineRenderer implements ClientModInitializer {
                     return true;
                 }
 
+                // Reset if moving to another block, or if stopped mining
                 if (!blockPos.equals(currentBlock) || !mc.options.attackKey.isPressed()) {
                     timeoutExceeded = false;
                     ticksNeeded = -1;
@@ -93,12 +113,15 @@ public class OutlineRenderer implements ClientModInitializer {
 
                 BlockState bs = mc.world.getBlockState(currentBlock);
                 String blockName = SpeedCalc.getBlockName(bs.getBlock(), blockPos);
+
+                // Calculate mining speed
                 double extra = blockName.contains("gem") && Config.extra ? 855 : 0;
                 double ticks = SpeedCalc.getTicksToBreak(
                         SpeedCalc.blockHardness.getOrDefault(blockName, -1),
                         (Util.speed() + extra)
 
                 );
+
 
                 if (!Config.blockEnabled.getOrDefault(blockName, false)) {
                     log("Block not enabled!", time);
@@ -109,6 +132,7 @@ public class OutlineRenderer implements ClientModInitializer {
                     log("Ticks needed is null!", time);
                     return true;
                 };
+
                 ticksNeeded = ticks;
 
                 Camera camera = mc.getEntityRenderDispatcher().camera;
@@ -127,7 +151,6 @@ public class OutlineRenderer implements ClientModInitializer {
                 double dy = currentBlock.getY() - camPos.y;
                 double dz = currentBlock.getZ() - camPos.z;
 
-
                 Matrix4f matrix = matrixStack.peek().getPositionMatrix();
 
                 shape.forEachEdge((minX, minY, minZ, maxX, maxY, maxZ) -> {
@@ -141,11 +164,12 @@ public class OutlineRenderer implements ClientModInitializer {
                             .normal(dir.x, dir.y, dir.z);
                 });
             }
+            log("Mining speed: " + Util.speed(), time);
             log("Rendering outlines now!", time);
             return false;
 
         });
-        ClientTickEvents.END_CLIENT_TICK.register(clientWorld -> {
+        ClientTickEvents.END_WORLD_TICK.register(clientWorld -> {
             MinecraftClient client = MinecraftClient.getInstance();
 
             if (client.player != null && client.world != null) {
@@ -159,6 +183,8 @@ public class OutlineRenderer implements ClientModInitializer {
                         : ticksNeeded;
                 timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset && client.options.attackKey.isPressed();
             }
+            log("Ticks needed: " + ticksNeeded, System.currentTimeMillis());
+
             if (sound && timeoutExceeded && Config.sound && client.options.attackKey.isPressed()) {
                 sound = false;
                 SoundEvent useSound = SoundEvent.of(Identifier.of(Config.soundpath));
