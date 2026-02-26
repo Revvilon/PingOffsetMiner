@@ -2,9 +2,10 @@ package pom.v1.commands;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import pom.v1.Util;
 import pom.v1.modmenu.pomConfig;
 import pom.v1.modmenu.pomGui;
@@ -15,36 +16,40 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.lit
 public class pomCommands {
     public static void register(CommandDispatcher<FabricClientCommandSource> dispatcher) {
         dispatcher.register(literal("pom")
-                .executes(context -> {
-                    MinecraftClient client = MinecraftClient.getInstance();
-                    client.send(() -> client.setScreen(pomGui.createScreen(null)));
-                    Util.sendMsg(Text.literal("Opened config!")
-                            .formatted(Formatting.WHITE, Formatting.BOLD)
+                .executes(conComponent -> {
+                    Minecraft client = Minecraft.getInstance();
+                    
+                    if (client.player == null) return 1;
+                    client.execute(() -> {
+                        client.setScreen(pomGui.createScreen((Screen) null));
+                    });
+                    Util.sendMsg(Component.literal("Opened config!")
+                            .withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD)
                     );
                     return 1;
                 })
                 .then(literal("restart")
                         .executes(ctx -> {
                             pomConfig.init();
-                            Util.sendMsg(Text.literal("POM config restarted!"));
+                            Util.sendMsg(Component.literal("POM config restarted!"));
                             return 1;
                         }))
                 .then(literal("ping")
                         .executes(ctx -> {
-                            Util.sendMsg(Text.literal("Your ping is: ")
-                                    .formatted(Formatting.GRAY)
-                                    .append(Text.literal(String.valueOf(Util.getAverage(10)))
-                                            .formatted(Formatting.AQUA, Formatting.BOLD)
+                            Util.sendMsg(Component.literal("Your ping is: ")
+                                    .withStyle(ChatFormatting.GRAY)
+                                    .append(Component.literal(String.valueOf(Util.getAverage(10)))
+                                            .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                                     )
                             );
                             return 1;
                         }))
                 .then(literal("tps")
                         .executes(ctx -> {
-                            Util.sendMsg(Text.literal("Your tps is: ")
-                                    .formatted(Formatting.GRAY)
-                                    .append(Text.literal(String.valueOf(round(Util.tps)))
-                                            .formatted(Formatting.AQUA, Formatting.BOLD)
+                            Util.sendMsg(Component.literal("Your tps is: ")
+                                    .withStyle(ChatFormatting.GRAY)
+                                    .append(Component.literal(String.valueOf(round(Util.tps)))
+                                            .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                                     )
                             );
                             return 1;

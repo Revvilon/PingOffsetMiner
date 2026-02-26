@@ -1,8 +1,7 @@
 package pom.v1;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 import java.util.HashMap;
 
@@ -47,7 +46,7 @@ public class SpeedCalc {
         put("skyblock:peridot_gemstone", 5200);
     }};
 
-    public static String getBlockName(Block block, BlockPos eventPos) {
+    public static String getBlockName(Block block) {
         try {
             if (block == Blocks.GRAY_WOOL || block == Blocks.CYAN_TERRACOTTA)
                 return "skyblock:gray_mithril";

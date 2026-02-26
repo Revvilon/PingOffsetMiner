@@ -1,23 +1,27 @@
 package pom.v1.mixin;
 
-import net.minecraft.client.network.ClientPlayNetworkHandler;
-import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket;
+import net.minecraft.client.multiplayer.ClientPacketListener;
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pom.v1.Util;
 
-@Mixin(ClientPlayNetworkHandler.class)
+@Mixin(ClientPacketListener.class)
 public class tpsMixin {
+    @Unique
     private static long lastRealTime = -1;
+    @Unique
     private static long lastWorldAge = -1;
+    @Unique
     private static double estTps = 20.0;
 
-    @Inject(method = "onWorldTimeUpdate", at = @At("HEAD"))
-    private void onWorldTimeUpdate(WorldTimeUpdateS2CPacket packet, CallbackInfo ci) {
+    @Inject(method = "handleSetTime", at = @At("HEAD"))
+    private void onHandleSetTime(ClientboundSetTimePacket packet, CallbackInfo ci) {
         long currentRealTime = System.currentTimeMillis();
-        long currentWorldAge = packet.time();
+        long currentWorldAge = packet.gameTime();
 
         if (lastWorldAge != -1 && lastRealTime != -1) {
             long tickDiff = currentWorldAge - lastWorldAge;

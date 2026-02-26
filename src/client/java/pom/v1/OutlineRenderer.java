@@ -1,49 +1,60 @@
 package pom.v1;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import org.joml.Matrix4f;
-import org.joml.Vector3f;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import pom.v1.modmenu.pomConfig;
 
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Objects;
 
+import static pom.v1.render.pomRender.filledBoxDraw;
+
 
 public class OutlineRenderer implements ClientModInitializer {
 
     // Initialize variables
     private BlockPos currentBlock;
+    private BlockState bs;
     private double ticksNeeded = -1;
     private boolean timeoutExceeded;
     private int startServerTick;
-    public HitResult hr;
+    private Vec3 camPos;
+    private VoxelShape shape;
+    private String blockName;
 
     public long lastSent = 0L;
 
     // Config handler
     pomConfig Config = pomConfig.HANDLER.instance();
+
+    boolean sound = false;
+
+    HashMap<String, Long> logs = new HashMap<String, Long>();
+
+
+
+    private void log(String text, Long time) {
+        if (!Config.logging) return;
+        logs.putIfAbsent(text, 10001L);
+        if ((System.currentTimeMillis() - logs.get(text)) <= 2000) return;
+        Util.sendMsg(Component.literal(text).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
+        logs.replace(text, time);
+    }
+
 
     @Override
     public void onInitializeClient() {
@@ -53,157 +64,172 @@ public class OutlineRenderer implements ClientModInitializer {
         AttackBlockCallback.EVENT.register((player, world, hand, pos, direction) -> {
             if ((System.currentTimeMillis() - lastSent) >= 10000) {
                 lastSent = System.currentTimeMillis();
-                if (Config.debug && !Config.active && !Util.getIsland()) return ActionResult.PASS;
+                if (Config.debug && !Config.active && !Util.getIsland()) return InteractionResult.PASS;
                 if (Util.speed() == -1 && !Config.debug && Config.active && Util.getIsland()) {
-                    Util.sendMsg(Text.literal("Mining Speed not found! Please enable in tab widget"));
-                    Util.sendMsg(Text.literal("To enable: /tab -> Stats Widget -> Shown Stats -> Mining Speed"));
+                    Util.sendMsg(Component.literal("Mining Speed not found! Please enable in tab widget"));
+                    Util.sendMsg(Component.literal("To enable: /tab -> Stats Widget -> Shown Stats -> Mining Speed"));
+                    Util.sendMsg(Component.literal("Please make sure that the Stats Widget is visible in the tab-list."));
                 }
                 if (Util.tps <= 0) {
-                    Util.sendMsg(Text.literal("Tps not found! Please wait a little bit"));
+                    Util.sendMsg(Component.literal("Tps not found! Please wait a little bit"));
                 }
 
-                return ActionResult.FAIL;
+                return InteractionResult.FAIL;
             }
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
 
-        ClientTickEvents.START_CLIENT_TICK.register(client -> {
-            // Failsafe to see if currently looking at block
-            // Can't do this inside of BEFORE_BLOCK_OUTLINE since it already assumes looking at block
-            hr = client.crosshairTarget;
-            if (hr != null && hr.getType() == HitResult.Type.MISS) {
-                ticksNeeded = 0;
-                sound = false;
-                currentBlock = null;
-                log("HitResult: " + hr.getType(), System.currentTimeMillis());
-            }
-        });
-        // Outline rendering
-        WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((worldRenderContext, outline) -> {
+        ClientTickEvents.START_CLIENT_TICK.register((client) -> {
+
             long time = System.currentTimeMillis();
+            Minecraft mc = Minecraft.getInstance();
+            if (client.level == null || client.player == null || mc.level == null) return;
+
+            BlockPos blockPos = Util.blockPos(client);
+            // Reset if not currently looking at block
+            if (!Objects.equals(blockPos, currentBlock) || !client.options.keyAttack.isDown()) {
+                ticksNeeded = -1;
+                sound = false;
+                currentBlock = blockPos;
+                startServerTick = client.player.tickCount;
+            }
+            if (!Config.active) {
+                ticksNeeded = -1;
+                log("Not active!", time);
+                return;
+            }
 
             // Get island
             if (!Util.getIsland() && !Config.debug) {
                 log("Island not found!", time);
-                return true;
-            };
-            MinecraftClient mc = MinecraftClient.getInstance();
-            if (hr == null) return true;
-            if (hr instanceof BlockHitResult) {
-                BlockPos blockPos = ((BlockHitResult) hr).getBlockPos();
-                if (!Config.active) {
-                    ticksNeeded = -1;
-                    log("Not active!", time);
-                    return true;
-                }
+                return;
+            }
 
-                // Reset if moving to another block, or if stopped mining
-                if (!blockPos.equals(currentBlock) || !mc.options.attackKey.isPressed()) {
-                    timeoutExceeded = false;
-                    ticksNeeded = -1;
-                    currentBlock = blockPos;
-
-                    if (mc.player != null) startServerTick = mc.player.age;
-                }
-
-                if (currentBlock == null || mc.world == null || worldRenderContext.consumers() == null) {
-                    log("Block, World or RenderContext is null!", time);
-                    return true;
-                };
-
-                BlockState bs = mc.world.getBlockState(currentBlock);
-                String blockName = SpeedCalc.getBlockName(bs.getBlock(), blockPos);
+            if (currentBlock != null) {
+                bs = mc.level.getBlockState(currentBlock);
+                blockName = SpeedCalc.getBlockName(bs.getBlock());
 
                 // Calculate mining speed
-                double extra = blockName.contains("gem") && Config.extra ? 855 : 0;
+                double extra = blockName.contains("gem") && Config.extra ? Config.extraVal : 0;
                 double ticks = SpeedCalc.getTicksToBreak(
                         SpeedCalc.blockHardness.getOrDefault(blockName, -1),
                         (Util.speed() + extra)
 
                 );
 
-
                 if (!Config.blockEnabled.getOrDefault(blockName, false)) {
+
+                    currentBlock = null;
                     log("Block not enabled!", time);
-                    return true;
+                    return;
                 }
 
                 if (ticks == -1) {
                     log("Ticks needed is null!", time);
-                    return true;
-                };
+                    return;
+                }
+                shape = bs.getShape(mc.level, currentBlock);
 
                 ticksNeeded = ticks;
 
-                Camera camera = mc.getEntityRenderDispatcher().camera;
-                if (camera == null) {
-                    log("Camera is null!", time);
-                    return true;
+                if (Util.boost()) return;
+
+                if (client.player != null && client.level != null) {
+                    int ticksElapsed = client.player.tickCount - startServerTick;
+
+                    double debugTps = Config.debug ? 20 : Util.tps;
+                    double pingSec = Config.debug ? Config.ping / 1000.0 : Util.getAverage(10) / 1000.0;
+
+                    double pingOffset = pingSec > 0 && ticksNeeded > 0
+                            ? ticksNeeded - pingSec * debugTps
+                            : ticksNeeded;
+                    timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset && client.options.keyAttack.isDown();
                 }
-                Vec3d camPos = camera.getPos();
-                VoxelShape shape = bs.getOutlineShape(mc.world, currentBlock);
+                log("Ticks needed: " + ticksNeeded, System.currentTimeMillis());
+                log("TPS: " + Util.tps, System.currentTimeMillis());
+                log("Mining speed: " + Util.speed(), System.currentTimeMillis());
 
-                MatrixStack matrixStack = worldRenderContext.matrices();
-                VertexConsumer buffer = worldRenderContext.consumers().getBuffer(Config.selectedLine.getLayer());
-                Color red = timeoutExceeded ? Config.color2 : Config.color1;
-
-                double dx = currentBlock.getX() - camPos.x;
-                double dy = currentBlock.getY() - camPos.y;
-                double dz = currentBlock.getZ() - camPos.z;
-
-                Matrix4f matrix = matrixStack.peek().getPositionMatrix();
-
-                shape.forEachEdge((minX, minY, minZ, maxX, maxY, maxZ) -> {
-                    Vector3f dir = new Vector3f((float) (maxX - minX), (float) (maxY - minY), (float) (maxZ - minZ))
-                            .normalize();
-                    buffer.vertex(matrix, (float) (minX + dx), (float) (minY + dy), (float) (minZ + dz))
-                            .color(red.getRed(), red.getGreen(), red.getBlue(), red.getAlpha())
-                            .normal(dir.x, dir.y, dir.z);
-                    buffer.vertex(matrix, (float) (maxX + dx), (float) (maxY + dy), (float) (maxZ + dz))
-                            .color(red.getRed(), red.getGreen(), red.getBlue(), red.getAlpha())
-                            .normal(dir.x, dir.y, dir.z);
-                });
-            }
-            log("Mining speed: " + Util.speed(), time);
-            log("Rendering outlines now!", time);
-            return false;
-
+                if (sound && timeoutExceeded && Config.sound && client.options.keyAttack.isDown()) {
+                    sound = false;
+                    if (client.player == null) return;
+                    SoundEvent useSound = SoundEvent.createVariableRangeEvent(Identifier.parse(Config.soundpath));
+                    client.player.playSound(useSound);
+                }
+                if (!sound && !timeoutExceeded) sound = true;
+            };
         });
-        ClientTickEvents.END_WORLD_TICK.register(clientWorld -> {
-            MinecraftClient client = MinecraftClient.getInstance();
+        WorldRenderEvents.BEFORE_TRANSLUCENT.register((context) -> {
+            if (Config.active && shape != null && currentBlock != null && !Util.boost()) {
+                PoseStack stack = context.matrices();
+                Color blockCol = timeoutExceeded ? Config.blockCol2 : Config.blockCol1;
 
-            if (client.player != null && client.world != null) {
-                int ticksElapsed = client.player.age - startServerTick;
+                stack.pushPose();
 
-                double debugTps = Config.debug ? 20 : Util.tps;
-                double pingSec = Config.debug ? Config.ping / 1000.0 : Util.getAverage(10) / 1000.0;
+                filledBoxDraw(
+                        stack, context, shape, blockCol, currentBlock
+                );
 
-                double pingOffset = pingSec > 0 && ticksNeeded > 0
-                        ? ticksNeeded - pingSec * debugTps
-                        : ticksNeeded;
-                timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset && client.options.attackKey.isPressed();
+                stack.popPose();
             }
-            log("Ticks needed: " + ticksNeeded, System.currentTimeMillis());
-
-            if (sound && timeoutExceeded && Config.sound && client.options.attackKey.isPressed()) {
-                sound = false;
-                SoundEvent useSound = SoundEvent.of(Identifier.of(Config.soundpath));
-                if (client.player == null) return;
-                client.player.playSound(useSound);
-            }
-            if (!sound && !timeoutExceeded) sound = true;
         });
-    }
 
-    public boolean sound = false;
+/*
+WorldRenderEvents.BEFORE_TRANSLUCENT.register(context -> {
+                    VoxelShape shape = bs.getShape(Minecraft.getInstance().level, currentBlock);
 
-    HashMap<String, Long> logs = new HashMap<String, Long>();
+                    PoseStack matrixStack = context.matrices();
+                    VertexConsumer buffer = context.consumers().getBuffer(());
+                    Color red = timeoutExceeded ? Config.color2 : Config.color1;
 
-    private void log(String text, Long time) {
-        if (!Config.logging) return;
-        logs.putIfAbsent(text, 10001L);
-        if ((System.currentTimeMillis() - logs.get(text)) <= 10000) return;
-        Util.sendMsg(Text.literal(text).formatted(Formatting.RED, Formatting.BOLD));
-        logs.replace(text, time);
-    }
-}
+                    double dx = currentBlock.getX() - camPos.x;
+                    double dy = currentBlock.getY() - camPos.y;
+                    double dz = currentBlock.getZ() - camPos.z;
+
+                    Matrix4f matrix = matrixStack.peek().getPositionMatrix();
+                    VertexRendering.drawOutline(
+                            ,
+                            buffer,
+                            shape,
+                            currentBlock.getX(), currentBlock.getY(), currentBlock.getZ(),
+                            red.getRGB()
+                    );
+
+                    Color blockCol = timeoutExceeded ? Config.blockCol2 : Config.blockCol1;
+
+                    VoxelShape boxShape = bs.getOutlineShape(mc.world, blockPos)
+                            .offset(-camPos.x, -camPos.y, -camPos.z);
+                    VertexConsumer boxBuf = worldRenderContext.consumers().getBuffer(DEBUG_FILLED_BOX_TEST_PHASE);
+                    boxShape.forEachBox(((minX, minY, minZ, maxX, maxY, maxZ) -> {
+                        myDrawFilledBox(
+                                matrixStack,
+                                boxBuf,
+                                (float) minX + blockPos.getX(), (float) minY + blockPos.getY(), (float) minZ + blockPos.getZ(),
+                                (float) maxX + blockPos.getX(), (float) maxY + blockPos.getY(), (float) maxZ + blockPos.getZ(),
+                                (float) (blockCol.getRed() / 255.0), (float) (blockCol.getGreen() / 255.0), (float) (blockCol.getBlue() / 255.0), (float) (blockCol.getAlpha() / 255.0)
+                        );
+                    }));
+                }
+
+                log("Mining speed: " + Util.speed(), time);
+        log("Rendering outlines now!", time);
+
+        return;
+        });
+
+    public void drawOutline(WorldRenderContext context, BlockPos pos, VoxelShape shape, Color color) {
+        Vec3d cam = context.worldState().cameraRenderState.pos;
+        context.matrices().push();
+        context.matrices().translate(pos.getX() - cam.x, pos.getY() -cam.y, pos.getZ() - cam.z);
+
+        VertexConsumer buffer = context.consumers().getBuffer(DEBUG_OUTLINE_PHASE);
+
+        VertexRendering.drawOutline(
+                context.matrices(),
+                buffer,
+                shape,
+                0, 0, 0,
+                color.getRGB()
+        );
+    }*/
+
+}}

@@ -2,8 +2,8 @@ package pom.v1.modmenu;
 
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.*;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
 import pom.v1.SpeedCalc;
 
@@ -13,9 +13,9 @@ public class pomGui {
 
 
     public static Screen createScreen(Screen parent) {
-        var metCat = OptionGroup.createBuilder().name(Text.literal("Metals"));
-        var gemCat = OptionGroup.createBuilder().name(Text.literal("Gemstones"));
-        var oreCat = OptionGroup.createBuilder().name(Text.literal("Ores"));
+        var metCat = OptionGroup.createBuilder().name(Component.literal("Metals"));
+        var gemCat = OptionGroup.createBuilder().name(Component.literal("Gemstones"));
+        var oreCat = OptionGroup.createBuilder().name(Component.literal("Ores"));
 
 
         pomConfig Config = pomConfig.HANDLER.instance();
@@ -28,7 +28,7 @@ public class pomGui {
             if (key.contains("minecraft")) let = oreCat;
             if (let == null) return;
             let.option(Option.<Boolean>createBuilder()
-                    .name(Text.literal(key.replaceAll("^.*:", "").replace("_", " ")))
+                    .name(Component.literal(key.replaceAll("^.*:", "").replace("_", " ")))
                             .binding(
                                     true,
                                     () -> Config.blockEnabled.get(key),
@@ -40,12 +40,12 @@ public class pomGui {
 
 
         return YetAnotherConfigLib.createBuilder()
-                .title(Text.literal(""))
+                .title(Component.literal(""))
                 .category(ConfigCategory.createBuilder()
-                        .name(Text.literal("POM - Ping-Offset-Miner"))
+                        .name(Component.literal("POM - Ping-Offset-Miner"))
                         .option(Option.<Boolean>createBuilder()
-                                .name(Text.literal("Active"))
-                                .description(OptionDescription.of(Text.literal("Toggles POM on / off")))
+                                .name(Component.literal("Active"))
+                                .description(OptionDescription.of(Component.literal("Toggles POM on / off")))
                                 .controller(TickBoxControllerBuilder::create)
                                 .binding(
                                         true,
@@ -53,48 +53,94 @@ public class pomGui {
                                         newVal -> Config.active = newVal
                                 )
                                 .build())
+                       /* .group(OptionGroup.createBuilder()
+                                .name(Component.literal("Outline"))
+                                .option(Option.<Boolean>createBuilder()
+                                        .name(Component.literal("Outline active"))
+                                        .binding(
+                                                true,
+                                                () -> Config.lineactive,
+                                                newVal -> Config.lineactive = newVal
+                                        )
+                                                .controller(TickBoxControllerBuilder::create)
+                                        .build())
+                                        .option(Option.<Color>createBuilder()
+                                                .name(Component.literal("Block not broken line color:"))
+                                                .description(OptionDescription.of(Component.literal("The color of the block outline that shows when a block is not yet broken")))
+                                                .binding(
+                                                        new Color(255, 0, 0, 255),
+                                                        () -> Config.color1,
+                                                        newVal -> Config.color1 = newVal
+                                                )
+                                                .controller(opt -> ColorControllerBuilder.create(opt)
+                                                        .allowAlpha(true)
+                                                )
+                                                .build())
+                                        .option(Option.<Color>createBuilder()
+                                                .name(Component.literal("Block broken line color:"))
+                                                .description(OptionDescription.of(Component.literal("The color of the block outline that shows when a block is broken")))
+                                                .binding(
+                                                        new Color(0, 255, 0, 255),
+                                                        () -> Config.color2,
+                                                        newVal -> Config.color2 = newVal
+                                                )
+                                                .controller(opt -> ColorControllerBuilder.create(opt)
+                                                        .allowAlpha(true)
+                                                )
+                                                .build())
+                                        .option(Option.<Double>createBuilder()
+                                                .name(Component.literal("Line width"))
+                                                .binding(
+                                                        1.0,
+                                                        () -> Config.lineWidth,
+                                                        newVal -> Config.lineWidth = newVal
+                                                )
+                                                .controller(opt -> DoubleSliderControllerBuilder.create(opt)
+                                                        .range(0.0, 10.0)
+                                                        .step(1.0))
+                                                .build())
+                        .build())
+                        */
                         .group(OptionGroup.createBuilder()
-                                .name(Text.literal("Outline"))
-                                .option(Option.<Color>createBuilder() /*Config.properties.setProperty("c1", ("#" + Integer.toHexString(newVal.getRed()) + Integer.toHexString(newVal.getBlue()) + Integer.toHexString(newVal.getGreen())))*/
-                                        .name(Text.literal("Block not broken color:"))
-                                        .description(OptionDescription.of(Text.literal("The color of the block outline that shows when a block is not yet broken")))
+                                .name(Component.literal("Block highlight"))
+                                /*
+                                                              .option(Option.<Boolean>createBuilder()
+                                        .name(Component.literal("Block highlight active"))
                                         .binding(
-                                                new Color(255, 0, 0, 255),
-                                                () -> Config.color1,
-                                                newVal -> Config.color1 = newVal
+                                                true,
+                                                () -> Config.blockactive,
+                                                newVal -> Config.blockactive = newVal
                                         )
-                                        .controller(opt -> ColorControllerBuilder.create(opt)
-                                                .allowAlpha(true)
-                                        )
+                                        .controller(TickBoxControllerBuilder::create)
                                         .build())
+                                        */
                                 .option(Option.<Color>createBuilder()
-                                        .name(Text.literal("Block broken color:"))
-                                        .description(OptionDescription.of(Text.literal("The color of the block outline that shows when a block is broken")))
+                                                .name(Component.literal("Block not broken highlight color"))
+                                                .binding(
+                                                        new Color(255, 0, 0, 50),
+                                                        () -> Config.blockCol1,
+                                                        newVal -> Config.blockCol1 = newVal
+                                                )
+                                                .controller(opt -> ColorControllerBuilder.create(opt)
+                                                        .allowAlpha(true)
+                                                )
+                                                .build())
+                                .option(Option.<Color>createBuilder()
+                                        .name(Component.literal("Block broken highlight color"))
                                         .binding(
-                                                new Color(0, 255, 0, 255),
-                                                () -> Config.color2,
-                                                newVal -> Config.color2 = newVal
+                                                new Color(255, 0, 0, 50),
+                                                () -> Config.blockCol2,
+                                                newVal -> Config.blockCol2 = newVal
                                         )
                                         .controller(opt -> ColorControllerBuilder.create(opt)
                                                 .allowAlpha(true)
-                                        )
-                                        .build())
-                                .option(Option.<pomConfig.line>createBuilder()
-                                        .name(Text.literal("Line style"))
-                                        .binding(
-                                                pomConfig.line.ThinLine,
-                                                () -> Config.selectedLine,
-                                                newVal -> Config.selectedLine = newVal
-                                        )
-                                        .controller(opt -> EnumControllerBuilder.create(opt)
-                                                .enumClass(pomConfig.line.class)
                                         )
                                         .build())
                                 .build())
                         .group(OptionGroup.createBuilder()
-                                .name(Text.literal("Sounds"))
+                                .name(Component.literal("Sounds"))
                                 .option(Option.<Boolean>createBuilder()
-                                        .name(Text.literal("Play a sound when block is broken"))
+                                        .name(Component.literal("Play a sound when block is broken"))
                                         .binding(
                                                 false,
                                                 () -> Config.sound,
@@ -103,7 +149,7 @@ public class pomGui {
                                         .controller(TickBoxControllerBuilder::create)
                                         .build())
                                 .option(Option.<String>createBuilder()
-                                        .name(Text.literal("Path to sound:"))
+                                        .name(Component.literal("Path to sound:"))
                                         .binding(
                                                 "",
                                                 () -> Config.soundpath,
@@ -112,24 +158,24 @@ public class pomGui {
                                         .controller(StringControllerBuilder::create)
                                         .build())
                                 .option(ButtonOption.createBuilder()
-                                        .name(Text.literal("List of sounds"))
-                                        .text(Text.literal("Open URL"))
+                                        .name(Component.literal("List of sounds"))
+                                        .text(Component.literal("Open URL"))
                                         .action((YACLScreen, thisOption) -> {
-                                            Util.getOperatingSystem().open("https://www.digminecraft.com/lists/sound_list_pc.php");
+                                            Util.getPlatform().openUri("https://www.digminecraft.com/lists/sound_list_pc.php");
                                         })
                                         .build())
                                 .build())
                         .build())
                 .category(ConfigCategory.createBuilder()
-                        .name(Text.literal("Enabled blocks"))
+                        .name(Component.literal("Enabled blocks"))
                         .group(gemCat.build())
                         .group(metCat.build())
                         .group(oreCat.build())
                         .build())
                 .category(ConfigCategory.createBuilder()
-                        .name(Text.literal("Debugging"))
+                        .name(Component.literal("Debugging"))
                         .option(Option.<Boolean>createBuilder()
-                                .name(Text.literal("Custom stats enabled"))
+                                .name(Component.literal("Custom stats enabled"))
                                 .binding(
                                         false,
                                         () -> Config.debug,
@@ -138,7 +184,7 @@ public class pomGui {
                                 .controller(TickBoxControllerBuilder::create)
                                 .build())
                         .option(Option.<Double>createBuilder()
-                                .name(Text.literal("Custom mining speed"))
+                                .name(Component.literal("Custom mining speed"))
                                 .binding(
                                         0.0,
                                         () -> Config.speed,
@@ -150,7 +196,7 @@ public class pomGui {
 
                                 .build())
                         .option(Option.<Double>createBuilder()
-                                .name(Text.literal("Custom ping"))
+                                .name(Component.literal("Custom ping"))
                                 .binding(
                                         0.0,
                                         () -> Config.ping,
@@ -162,9 +208,9 @@ public class pomGui {
                                 .build())
                         .group(OptionGroup.createBuilder()
                                 .option(Option.<Boolean>createBuilder()
-                                        .name(Text.literal("Assume +855ms"))
+                                        .name(Component.literal("Extra mining speed on gemstones"))
                                         .description(OptionDescription.createBuilder()
-                                                .text(Text.literal("Lapidary + HOTM + Blue Cheese omelette, only applies to gemstones"))
+                                                .text(Component.literal("Lapidary + HOTM + Blue Cheese omelette, only applies to gemstones"))
                                                 .build())
                                         .binding(
                                                 true,
@@ -173,8 +219,17 @@ public class pomGui {
                                         )
                                         .controller(TickBoxControllerBuilder::create)
                                         .build())
+                                .option(Option.<Double>createBuilder()
+                                        .name(Component.literal("Amount of extra speed"))
+                                        .binding(
+                                                855.0,
+                                                () -> Config.extraVal,
+                                                newVal -> Config.extraVal = newVal
+                                        )
+                                        .controller(DoubleFieldControllerBuilder::create)
+                                        .build())
                                 .option(Option.<Boolean>createBuilder()
-                                        .name(Text.literal("Turn off when using MSB"))
+                                        .name(Component.literal("Turn off when using MSB"))
                                         .binding(
                                                 true,
                                                 () -> Config.ability,
@@ -183,7 +238,7 @@ public class pomGui {
                                         .controller(TickBoxControllerBuilder::create)
                                         .build())
                                 .option(Option.<Boolean>createBuilder()
-                                        .name(Text.literal("Enable logging"))
+                                        .name(Component.literal("Enable logging"))
                                         .binding(
                                                 false,
                                                 () -> Config.logging,

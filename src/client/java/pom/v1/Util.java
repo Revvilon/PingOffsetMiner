@@ -1,38 +1,41 @@
 package pom.v1;
 
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.hud.DebugHud;
-import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.profiler.MultiValueDebugSampleLogImpl;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.DebugScreenOverlay;
+import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.util.debugchart.SampleStorage;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import pom.v1.modmenu.pomConfig;
 
 public class Util {
 
-    public static void sendMsg(MutableText message) {
-        MinecraftClient mc = MinecraftClient.getInstance();
+    public static void sendMsg(MutableComponent message) {
+        Minecraft mc = Minecraft.getInstance();
 
-        Text text = Text.literal("")
-                .append(Text.literal("[").formatted(Formatting.WHITE))
-                .append(Text.literal("POM").formatted(Formatting.AQUA))
-                .append(Text.literal("] ").formatted(Formatting.WHITE))
+        Component text = Component.literal("")
+                .append(Component.literal("[").withStyle(ChatFormatting.WHITE))
+                .append(Component.literal("POM").withStyle(ChatFormatting.AQUA))
+                .append(Component.literal("] ").withStyle(ChatFormatting.WHITE))
                 .append(message);
 
         if (mc.player == null) return;
 
-        mc.player.sendMessage(text,false);
+        mc.player.displayClientMessage(text,false);
 
     }
 
     public static Boolean getIsland() {
-        var network = MinecraftClient.getInstance().getNetworkHandler();
+        var network = Minecraft.getInstance().getConnection();
         if (network == null) return false;
 
-        for (PlayerListEntry entry : network.getPlayerList()) {
-            if (entry.getDisplayName() == null) continue;
-            String text = entry.getDisplayName().getString();
+        for (PlayerInfo entry : network.getOnlinePlayers()) {
+            if (entry.getTabListDisplayName() == null) continue;
+            String text = entry.getTabListDisplayName().getString();
 
             if (text.contains("Dwarven Mines") || text.contains("Crystal Hollows") || text.contains("Mineshaft")) {
                 return true;
@@ -43,7 +46,7 @@ public class Util {
     }
 
     public static double speed() {
-        var network = MinecraftClient.getInstance().getNetworkHandler();
+        var network = Minecraft.getInstance().getConnection();
         if (!pomConfig.HANDLER.instance().active)  {
             return -1;
         }
@@ -51,10 +54,10 @@ public class Util {
         if (pomConfig.HANDLER.instance().debug) return pomConfig.HANDLER.instance().speed;
 
         if (network == null) return -1;
-        for (PlayerListEntry entry : network.getPlayerList()) {
-            if (entry.getDisplayName() == null) continue;
+        for (PlayerInfo entry : network.getOnlinePlayers()) {
+            if (entry.getTabListDisplayName() == null) continue;
 
-            String text = entry.getDisplayName().getString();
+            String text = entry.getTabListDisplayName().getString();
 
             if (text.contains("Mining Speed:") && text.contains("⸕")) {
                 String cleaned = text.replaceAll("[^0-9]", "").replace("⸕", "");
@@ -66,20 +69,32 @@ public class Util {
         return -1;
 
     }
+    public static boolean boost() {
+        var network = Minecraft.getInstance().getConnection();
+        if (network == null || !pomConfig.HANDLER.instance().ability) return false;
+       for (PlayerInfo entry : network.getOnlinePlayers()) {
+            if (entry.getTabListDisplayName() == null) continue;
 
+            String text = entry.getTabListDisplayName().getString();
+
+            if (text.contains("Mining Speed Boost:") && text.contains("Available")) {
+                return false;
+            } else if (text.contains("Mining Speed Boost:")) {
+                return true;
+           }
+        }
+        return false;
+    }
     public static double getAverage(int sampleCount) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client.inGameHud == null) return 0;
+        Minecraft client = Minecraft.getInstance();
 
-        MultiValueDebugSampleLogImpl log;
+        SampleStorage log;
 
-        DebugHud debugHud = (client.inGameHud.getDebugHud());
-        log = debugHud.getPingLog();
+        DebugScreenOverlay debugHud = (client.gui.getDebugOverlay());
+        log = debugHud.getPingLogger();
 
 
-        if (log == null) return 0;
-
-        int availableEntries = Math.min(sampleCount, log.getLength());
+        int availableEntries = Math.min(sampleCount, log.size());
         if (availableEntries <= 0) return 0;
 
         long total = 0;
@@ -97,4 +112,17 @@ public class Util {
     }
 
     public static double tps = 20;
+
+
+    public static BlockPos blockPos(Minecraft mc) {
+        if (mc.level == null || mc.player == null) return null;
+
+        HitResult hr = mc.hitResult;
+
+        if (hr != null && hr.getType() ==  HitResult.Type.BLOCK) {
+            return ((BlockHitResult) hr).getBlockPos();
+        }
+
+        return  null;
+    }
 }

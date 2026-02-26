@@ -18,8 +18,5 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 		ClientCommandRegistrationCallback.EVENT.register((commandDispatcher, commandRegistryAccess) -> {
 			pomCommands.register(commandDispatcher);
 		});
-
-
 	}
-
 }

@@ -13,8 +13,8 @@ base {
 repositories {
 
 	maven {
-		name 'Xander Maven'
-		url 'https://maven.isxander.dev/releases'
+		name = 'Xander Maven'
+		url = 'https://maven.isxander.dev/releases'
 	}
 	maven {
 		name = "Terraformers"
@@ -48,7 +48,7 @@ fabricApi {
 dependencies {
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
