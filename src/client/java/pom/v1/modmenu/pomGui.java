@@ -128,7 +128,7 @@ public class pomGui {
                                 .option(Option.<Color>createBuilder()
                                         .name(Component.literal("Block broken highlight color"))
                                         .binding(
-                                                new Color(255, 0, 0, 50),
+                                                new Color(0, 255, 0, 50),
                                                 () -> Config.blockCol2,
                                                 newVal -> Config.blockCol2 = newVal
                                         )
