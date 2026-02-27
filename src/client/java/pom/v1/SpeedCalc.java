@@ -48,6 +48,8 @@ public class SpeedCalc {
 
     public static String getBlockName(Block block) {
         try {
+            if (block == Blocks.COAL_BLOCK)
+                return "minecraft:coal_block";
             if (block == Blocks.OBSIDIAN)
                 return "minecraft:obsidian";
             if (block == Blocks.GOLD_BLOCK)

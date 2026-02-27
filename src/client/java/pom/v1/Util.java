@@ -4,15 +4,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.util.debugchart.SampleStorage;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import pom.v1.modmenu.pomConfig;
 
 public class Util {
+
+    public static pomConfig Config = pomConfig.HANDLER.instance();
 
     public static void sendMsg(MutableComponent message) {
         Minecraft mc = Minecraft.getInstance();
@@ -30,6 +29,7 @@ public class Util {
     }
 
     public static Boolean getIsland() {
+        if (Config.debug) return true;
         var network = Minecraft.getInstance().getConnection();
         if (network == null) return false;
 
@@ -45,46 +45,20 @@ public class Util {
         return false;
     }
 
+    public static double previousSpeed = -1;
+
     public static double speed() {
-        var network = Minecraft.getInstance().getConnection();
-        if (!pomConfig.HANDLER.instance().active)  {
+        if (!Config.active)  {
             return -1;
         }
 
-        if (pomConfig.HANDLER.instance().debug) return pomConfig.HANDLER.instance().speed;
+        if (Config.debug) return Config.speed;
 
-        if (network == null) return -1;
-        for (PlayerInfo entry : network.getOnlinePlayers()) {
-            if (entry.getTabListDisplayName() == null) continue;
-
-            String text = entry.getTabListDisplayName().getString();
-
-            if (text.contains("Mining Speed:") && text.contains("⸕")) {
-                String cleaned = text.replaceAll("[^0-9]", "").replace("⸕", "");
-                if (!cleaned.isEmpty()) {
-                    return Double.parseDouble(cleaned);
-                }
-            }
-        }
-        return -1;
-
+        return previousSpeed;
     }
-    public static boolean boost() {
-        var network = Minecraft.getInstance().getConnection();
-        if (network == null || !pomConfig.HANDLER.instance().ability) return false;
-       for (PlayerInfo entry : network.getOnlinePlayers()) {
-            if (entry.getTabListDisplayName() == null) continue;
 
-            String text = entry.getTabListDisplayName().getString();
+    public static boolean boost = true;
 
-            if (text.contains("Mining Speed Boost:") && text.contains("Available")) {
-                return false;
-            } else if (text.contains("Mining Speed Boost:")) {
-                return true;
-           }
-        }
-        return false;
-    }
     public static double getAverage(int sampleCount) {
         Minecraft client = Minecraft.getInstance();
 
@@ -112,17 +86,4 @@ public class Util {
     }
 
     public static double tps = 20;
-
-
-    public static BlockPos blockPos(Minecraft mc) {
-        if (mc.level == null || mc.player == null) return null;
-
-        HitResult hr = mc.hitResult;
-
-        if (hr != null && hr.getType() ==  HitResult.Type.BLOCK) {
-            return ((BlockHitResult) hr).getBlockPos();
-        }
-
-        return  null;
-    }
 }

@@ -3,7 +3,6 @@
 	"package": "pom.v1.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"tpsMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
@@ -12,6 +11,9 @@
 		"requireAnnotations": false
 	},
 	"client": [
+		"chatMixin",
+		"renderMixin",
+		"tabMixin",
 		"chatMixin"
 	]
 }

@@ -4,7 +4,6 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import pom.v1.Util;
 import pom.v1.modmenu.pomConfig;
@@ -21,7 +20,7 @@ public class pomCommands {
                     
                     if (client.player == null) return 1;
                     client.execute(() -> {
-                        client.setScreen(pomGui.createScreen((Screen) null));
+                        client.setScreen(pomGui.createScreen(null));
                     });
                     Util.sendMsg(Component.literal("Opened config!")
                             .withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD)

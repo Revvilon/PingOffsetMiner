@@ -71,6 +71,9 @@ public class pomConfig {
     @SerialEntry
     public boolean logging = false;
 
+    @SerialEntry
+    public boolean drillSpeed = false;
+
     public static void init() {
         HANDLER.load();
     }
