@@ -5,11 +5,11 @@ import dev.isxander.yacl3.api.controller.*;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Util;
-import pom.v1.SpeedCalc;
+import pom.v1.pomGetter.SpeedCalc;
 
 import java.awt.*;
 
-public class pomGui {
+public class PomGui {
 
 
     public static Screen createScreen(Screen parent) {
@@ -18,7 +18,7 @@ public class pomGui {
         var oreCat = OptionGroup.createBuilder().name(Component.literal("Ores"));
 
 
-        pomConfig Config = pomConfig.HANDLER.instance();
+        PomConfig Config = PomConfig.HANDLER.instance();
 
         SpeedCalc.blockHardness.forEach((key, value) -> {
             Config.blockEnabled.putIfAbsent(key, true);
@@ -38,6 +38,59 @@ public class pomGui {
                             .build());
         });
 
+        Option<PomConfig.msbToggle> msbToggleOption = Option.<PomConfig.msbToggle>createBuilder()
+                .name(Component.literal("When using MSB:"))
+                .binding(
+                        PomConfig.msbToggle.ON,
+                        () -> Config.msbToggleValue,
+                        newVal -> Config.msbToggleValue = newVal
+                )
+                .available(Config.ability)
+                .controller(opt -> EnumControllerBuilder.create(opt)
+                        .enumClass(PomConfig.msbToggle.class)
+                        .formatValue(val -> Component.literal(val.toString()))
+                )
+                .build();
+        Option<Double> extraSpeedInputOption = Option.<Double>createBuilder()
+                .name(Component.literal("Amount of extra speed"))
+                .binding(
+                        855.0,
+                        () -> Config.extraVal,
+                        newVal -> Config.extraVal = newVal
+                )
+                .available(Config.extra)
+                .controller(DoubleFieldControllerBuilder::create)
+                .build();
+
+        OptionGroup customStatsGroup = OptionGroup.createBuilder()
+                .name(Component.literal("Custom stats"))
+                .description(OptionDescription.createBuilder()
+                        .text(Component.literal("Only use when debugging"))
+                        .build())
+                .option(Option.<Double>createBuilder()
+                        .name(Component.literal("Custom mining speed"))
+                        .binding(
+                                0.0,
+                                () -> Config.speed,
+                                newVal -> Config.speed = newVal
+                        )
+                        .controller(opt -> DoubleSliderControllerBuilder.create(opt)
+                                .range(0.0, 20000.0)
+                                .step(10.0))
+
+                        .build())
+                .option(Option.<Double>createBuilder()
+                        .name(Component.literal("Custom ping"))
+                        .binding(
+                                0.0,
+                                () -> Config.ping,
+                                newVal -> Config.ping = newVal
+                        )
+                        .controller(opt -> DoubleSliderControllerBuilder.create(opt)
+                                .range(0.0, 300.0)
+                                .step(5.0))
+                        .build())
+                .build();
 
         return YetAnotherConfigLib.createBuilder()
                 .title(Component.literal(""))
@@ -163,6 +216,38 @@ public class pomGui {
                                         })
                                         .build())
                                 .build())
+                        .group(OptionGroup.createBuilder()
+                                .name(Component.literal("Experimental"))
+                                .option(Option.<Boolean>createBuilder()
+                                        .name(Component.literal("Toggle POM when using Mining Speed Boost"))
+                                        .binding(
+                                                false,
+                                                () -> Config.ability,
+                                                newVal -> {
+                                                    Config.ability = newVal;
+                                                    msbToggleOption.setAvailable(newVal);
+                                                }
+                                        )
+                                        .controller(TickBoxControllerBuilder::create)
+                                        .build())
+                                .option(msbToggleOption)
+                                .option(Option.<Boolean>createBuilder()
+                                        .name(Component.literal("Extra mining speed on gemstones"))
+                                        .description(OptionDescription.createBuilder()
+                                                .text(Component.literal("Lapidary + HOTM + Blue Cheese omelette, only applies to gemstones"))
+                                                .build())
+                                        .binding(
+                                                true,
+                                                () -> Config.extra,
+                                                newVal -> {
+                                                    Config.extra = newVal;
+                                                    extraSpeedInputOption.setAvailable(newVal);
+                                                }
+                                        )
+                                        .controller(TickBoxControllerBuilder::create)
+                                        .build())
+                                .option(extraSpeedInputOption)
+                                .build())
                         .build())
                 .category(ConfigCategory.createBuilder()
                         .name(Component.literal("Enabled blocks"))
@@ -173,7 +258,7 @@ public class pomGui {
                 .category(ConfigCategory.createBuilder()
                         .name(Component.literal("Debugging"))
                         .option(Option.<Boolean>createBuilder()
-                                .name(Component.literal("Debugging enabled"))
+                                .name(Component.literal("Custom stats enabled"))
                                 .binding(
                                         false,
                                         () -> Config.debug,
@@ -181,35 +266,7 @@ public class pomGui {
                                 )
                                 .controller(TickBoxControllerBuilder::create)
                                 .build())
-                        .group(OptionGroup.createBuilder()
-                                .name(Component.literal("Custom stats"))
-                                .description(OptionDescription.createBuilder()
-                                        .text(Component.literal("Only use when debugging"))
-                                        .build())
-                                .option(Option.<Double>createBuilder()
-                                        .name(Component.literal("Custom mining speed"))
-                                        .binding(
-                                                0.0,
-                                                () -> Config.speed,
-                                                newVal -> Config.speed = newVal
-                                        )
-                                        .controller(opt -> DoubleSliderControllerBuilder.create(opt)
-                                                .range(0.0, 20000.0)
-                                                .step(10.0))
-
-                                        .build())
-                                .option(Option.<Double>createBuilder()
-                                        .name(Component.literal("Custom ping"))
-                                        .binding(
-                                                0.0,
-                                                () -> Config.ping,
-                                                newVal -> Config.ping = newVal
-                                        )
-                                        .controller(opt -> DoubleSliderControllerBuilder.create(opt)
-                                                .range(0.0, 300.0)
-                                                .step(5.0))
-                                        .build())
-                                .build())
+                        .group(customStatsGroup)
                         .group(OptionGroup.createBuilder()
                                 .option(Option.<Boolean>createBuilder()
                                         .name(Component.literal("Enable logging"))
@@ -224,56 +281,8 @@ public class pomGui {
                                         .controller(TickBoxControllerBuilder::create)
                                         .build())
                                 .build())
-                        .group(OptionGroup.createBuilder()
-                                .name(Component.literal("Experimental"))
-                                .option(Option.<Boolean>createBuilder()
-                                        .name(Component.literal("Mining Speed fetch fix"))
-                                        .description(OptionDescription.createBuilder()
-                                                .text(Component.literal("Experimental feature, tries to only fetch mining speed when holding drill. If you experience issues, disable this feature"))
-                                                .build())
-                                        .binding(
-                                                false,
-                                                () -> Config.drillSpeed,
-                                                newVal -> Config.drillSpeed = newVal
-                                        )
-                                        .controller(TickBoxControllerBuilder::create)
-                                        .build())
-                                .option(Option.<Boolean>createBuilder()
-                                        .name(Component.literal("Turn off when using MSB"))
-                                        .description(OptionDescription.createBuilder()
-                                                .text(Component.literal("Reads tab widget for pickaxe ability and turns off when mining speed boost is used"))
-                                                .build())
-                                        .binding(
-                                                false,
-                                                () -> Config.ability,
-                                                newVal -> Config.ability = newVal
-                                        )
-                                        .controller(TickBoxControllerBuilder::create)
-                                        .build())
-                                .build())
-                        .option(Option.<Boolean>createBuilder()
-                                .name(Component.literal("Extra mining speed on gemstones"))
-                                .description(OptionDescription.createBuilder()
-                                        .text(Component.literal("Lapidary + HOTM + Blue Cheese omelette, only applies to gemstones"))
-                                        .build())
-                                .binding(
-                                        true,
-                                        () -> Config.extra,
-                                        newVal -> Config.extra = newVal
-                                )
-                                .controller(TickBoxControllerBuilder::create)
-                                .build())
-                        .option(Option.<Double>createBuilder()
-                                .name(Component.literal("Amount of extra speed"))
-                                .binding(
-                                        855.0,
-                                        () -> Config.extraVal,
-                                        newVal -> Config.extraVal = newVal
-                                )
-                                .controller(DoubleFieldControllerBuilder::create)
-                                .build())
                         .build())
-                .save(pomConfig::save)
+                .save(PomConfig::save)
                 .build().generateScreen(parent);
     }
 }

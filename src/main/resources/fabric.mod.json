@@ -8,12 +8,11 @@
 		"xevalia"
 	],
 	"license": "CC0-1.0",
-	"icon": "assets/ping-offset-miner/icon.png",
+	"icon": "assets/ping-offset-miner/pom128px.png",
 	"environment": "*",
 	"entrypoints": {
 		"client": [
-			"pom.v1.PingOffsetMinerClient",
-			"pom.v1.render.pomRendering"
+			"pom.v1.PingOffsetMinerClient"
 		],
 		"modmenu": [
 			"pom.v1.modmenu.ModMenuIntegration"

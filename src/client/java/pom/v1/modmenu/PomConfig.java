@@ -10,8 +10,8 @@ import net.minecraft.resources.Identifier;
 import java.awt.*;
 import java.util.HashMap;
 
-public class pomConfig {
-    public static ConfigClassHandler<pomConfig> HANDLER = ConfigClassHandler.createBuilder(pomConfig.class)
+public class PomConfig {
+    public static ConfigClassHandler<PomConfig> HANDLER = ConfigClassHandler.createBuilder(PomConfig.class)
             .id(Identifier.withDefaultNamespace("ping-offset-miner"))
             .serializer(config -> GsonConfigSerializerBuilder.create(config)
                     .setPath(FabricLoader.getInstance().getConfigDir().resolve("pom.json5"))
@@ -72,7 +72,19 @@ public class pomConfig {
     public boolean logging = false;
 
     @SerialEntry
-    public boolean drillSpeed = false;
+
+    public msbToggle msbToggleValue = msbToggle.OFF;
+    public enum msbToggle {
+        OFF("Turn off"),
+        ON("Turn on");
+
+        private final String name;
+        msbToggle(String name) {
+            this.name = name;
+        }
+        @Override public String toString() {return name;}
+    }
+
 
     public static void init() {
         HANDLER.load();

@@ -2,16 +2,22 @@ package pom.v1;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.components.DebugScreenOverlay;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.util.debugchart.SampleStorage;
-import pom.v1.modmenu.pomConfig;
+import pom.v1.modmenu.PomConfig;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static pom.v1.PingOffsetMinerClient.TOOL_STATS;
 
 public class Util {
 
-    public static pomConfig Config = pomConfig.HANDLER.instance();
+    public static PomConfig Config = PomConfig.HANDLER.instance();
 
     public static void sendMsg(MutableComponent message) {
         Minecraft mc = Minecraft.getInstance();
@@ -30,14 +36,9 @@ public class Util {
 
     public static Boolean getIsland() {
         if (Config.debug) return true;
-        var network = Minecraft.getInstance().getConnection();
-        if (network == null) return false;
 
-        for (PlayerInfo entry : network.getOnlinePlayers()) {
-            if (entry.getTabListDisplayName() == null) continue;
-            String text = entry.getTabListDisplayName().getString();
-
-            if (text.contains("Dwarven Mines") || text.contains("Crystal Hollows") || text.contains("Mineshaft")) {
+        for (String entry : Util.getTabList()) {
+            if (entry.contains("Dwarven Mines") || entry.contains("Crystal Hollows") || entry.contains("Mineshaft")) {
                 return true;
             }
         }
@@ -45,22 +46,16 @@ public class Util {
         return false;
     }
 
-    public static double previousSpeed = -1;
-
-    public static double speed() {
-        if (!Config.active)  {
-            return -1;
-        }
-
-        if (Config.debug) return Config.speed;
-
-        return previousSpeed;
+    public class PingTracker {
+        public static long lastId = -1;
+        public static long sentTime = 0;
+        public static int lastPing = 0;
     }
 
-    public static boolean boost = true;
-
     public static double getAverage(int sampleCount) {
-        Minecraft client = Minecraft.getInstance();
+        return (int) PingTracker.lastPing;
+        /*
+                Minecraft client = Minecraft.getInstance();
 
         SampleStorage log;
 
@@ -69,7 +64,10 @@ public class Util {
 
 
         int availableEntries = Math.min(sampleCount, log.size());
-        if (availableEntries <= 0) return 0;
+        if (availableEntries <= 0) {
+            PingOffsetMinerClient.LOGGER.warn("No entries found!");
+            return 0;
+        }
 
         long total = 0;
         int count = 0;
@@ -82,8 +80,79 @@ public class Util {
                 count++;
             }
         }
+        PingOffsetMinerClient.LOGGER.warn("Found " + count + " entries for " + sampleCount + " samples");
         return count > 0 ? (double) total / count : 0;
+         */
     }
 
     public static double tps = 20;
+
+
+    public static boolean updateTab = true;
+
+    public static void updateTab() {
+        updateTab = true;
+    }
+    private static ArrayList<String> tabList = new ArrayList<>();
+
+    public static List<String> getTabList() {
+        if (updateTab) {
+            updateTab = false;
+            tabList.clear();
+            var network = Minecraft.getInstance().getConnection();
+            if (network != null) {
+                for (PlayerInfo entry : network.getOnlinePlayers()) {
+                    if (entry.getTabListDisplayName() == null) continue;
+                    String name = entry.getTabListDisplayName().getString();
+                    name = name.replaceAll("$.", "");
+                    tabList.add(name);
+                }
+            }
+        }
+        return tabList;
+    }
+
+    public static boolean foundSpeed() {
+        for (String entry : Util.getTabList()) {
+            if (convertSpeed(entry) > -1) return true;
+        }
+        return false;
+    }
+
+    public static double convertSpeed(String entry) {
+        Pattern pattern = Pattern.compile("Mining Speed: ⸕([0-9.]+)");
+        Matcher matcher = pattern.matcher(entry);
+
+        if (matcher.find()) {
+            try {
+                return Double.parseDouble(matcher.group(1));
+            } catch (NumberFormatException e) {
+                return -1;
+            }
+        }
+        return -1;
+    }
+
+    public static boolean shouldRender() {
+        if (Config.ability) {
+            switch (Config.msbToggleValue) {
+                case OFF -> {
+                    return !TOOL_STATS.getBoost();
+                }
+                case ON -> {
+                    return  TOOL_STATS.getBoost();
+                }
+            }
+        }
+        return true;
+    }
+
+    static HashMap<String, Long> logs = new HashMap<String, Long>();
+    public static void log(String text, Long time) {
+        if (!Config.logging) return;
+        logs.putIfAbsent(text, 10001L);
+        if ((System.currentTimeMillis() - logs.get(text)) <= 2000) return;
+        Util.sendMsg(Component.literal(text).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
+        logs.replace(text, time);
+    }
 }

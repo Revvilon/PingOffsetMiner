@@ -1,19 +1,18 @@
 {
-	"required": true,
-	"package": "pom.v1.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"mixins": [
-	],
-	"injectors": {
-		"defaultRequire": 1
-	},
-	"overwrites": {
-		"requireAnnotations": false
-	},
-	"client": [
-		"chatMixin",
-		"renderMixin",
-		"tabMixin",
-		"chatMixin"
+  "required": true,
+  "package": "pom.v1.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "InventoryMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": false
+  },
+  "client": [
+    "EventMixins",
+    "RenderMixin"
 	]
 }

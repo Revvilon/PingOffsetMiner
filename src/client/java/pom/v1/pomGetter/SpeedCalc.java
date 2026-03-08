@@ -1,4 +1,4 @@
-package pom.v1;
+package pom.v1.pomGetter;
 
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
