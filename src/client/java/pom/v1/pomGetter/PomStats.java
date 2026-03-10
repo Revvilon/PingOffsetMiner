@@ -7,6 +7,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import pom.v1.Util;
 import pom.v1.events.*;
 import pom.v1.modmenu.PomConfig;
 
@@ -151,10 +152,6 @@ public class PomStats {
             TOOL_STATS.setSpeed(event.speed);
         }
     }
-    @EventHandler
-    public void onTabUpdate(onTabUpdate event) {
-        TOOL_STATS.setBoost(false);
-    }
 
     private static final Pattern BOOST_PATTERN = Pattern.compile(
             "(?i)you used your mining speed boost pickaxe ability!"
@@ -168,6 +165,7 @@ public class PomStats {
             if (matcher.matches()) {
                 boostActive = true;
                 TOOL_STATS.setBoost(true);
+                Util.log("MSB enabled!", System.currentTimeMillis());
             }
         }
     }
@@ -178,16 +176,21 @@ public class PomStats {
         if (Config.ability) {
             if (boostActive) {
                 tickCount++;
+
+                for (String entry : Util.getTabList()) {
+                    if (entry.contains("speed boost: available!")) {
+                        tickCount = 0;
+                        TOOL_STATS.setBoost(false);
+                        Util.log("MSB disabled!", System.currentTimeMillis());
+                    }
+                }
+
                 if (tickCount >= (TOOL_STATS.getCd() * 20)) {
                     boostActive = false;
                     TOOL_STATS.setBoost(false);
+                    Util.log("MSB disabled!", System.currentTimeMillis());
                 }
             }
         }
-    }
-
-    @EventHandler
-    public void onGameJoin(gameJoinedEvent event) {
-        TOOL_STATS.setBoost(false);
     }
 }

@@ -1,20 +1,28 @@
 package pom.v1.pomNetwork;
 
 import meteordevelopment.orbit.EventHandler;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.common.ClientboundPingPacket;
+import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket;
+import net.minecraft.resources.Identifier;
+import pom.v1.PingOffsetMinerClient;
+import pom.v1.Util;
 import pom.v1.events.pingReceivedEvent;
-import pom.v1.events.tpsReceivedEvent;
 import pom.v1.events.worldTickEvent;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.stream.Collectors;
 
 public class PomPing {
 
     /// CODE BELOW TAKEN FROM PROPERERPING
     /// https://github.com/freegamerskids/PropererPing
+
+    public static final long ID = (long) -(PingOffsetMinerClient.MOD_ID.hashCode()) * 20;
+    private static long lastPing = -1;
 
     ConcurrentLinkedQueue<Long> latencies =  new ConcurrentLinkedQueue<>();
 
@@ -36,7 +44,7 @@ public class PomPing {
     public long getAverageLatency() {
         List<Long> latencyList = latencies.stream().toList();
         long sum = latencyList.stream().mapToLong(Long::longValue).sum();
-        return sum / latencyList.size();
+        return latencyList.isEmpty() ? 0 : sum / latencyList.size();
     }
 
     public void clear() {
@@ -45,8 +53,8 @@ public class PomPing {
 
     void sendQueryPing(Minecraft client) {
         if (client.getConnection() != null) {
-            long startTime = System.currentTimeMillis();
-            ServerboundPingRequestPacket packet = new ServerboundPingRequestPacket(startTime);
+            ServerboundPingRequestPacket packet = new ServerboundPingRequestPacket(ID);
+            lastPing = System.currentTimeMillis();
             client.getConnection().send(packet);
         }
     }
@@ -55,7 +63,7 @@ public class PomPing {
     @EventHandler
     public void tick(worldTickEvent event) {
         tickCount++;
-        if (tickCount > 10) {
+        if (tickCount > 20) {
             tickCount = 0;
             sendQueryPing(Minecraft.getInstance());
         }
@@ -63,6 +71,8 @@ public class PomPing {
 
     @EventHandler
     public void pingReceivedEvent(pingReceivedEvent event) {
-        receivedPacket(event.time);
+        if (lastPing != -1) {
+            receivedPacket(lastPing);
+        }
     }
 }

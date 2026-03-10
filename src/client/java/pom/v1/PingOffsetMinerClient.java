@@ -14,7 +14,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,7 +112,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 				double extra = Config.extra ? Config.extraVal : 0;
 
 				if (POM_BLOCK.getName().contains("gem")) {
-					debugSpeed += extra;
+					debugSpeed = debugSpeed + extra;
 				}
 
 				ticksNeeded = SpeedCalc.getTicksToBreak((int) POM_BLOCK.getHardness(), debugSpeed);
@@ -122,7 +121,6 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 						? ticksNeeded - pingSec * debugTps
 						: ticksNeeded;
 				timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset && client.options.keyAttack.isDown();
-				log("TimeoutExceeded: "  + timeoutExceeded, time);
 
 				if (sound && timeoutExceeded && Config.sound && client.options.keyAttack.isDown()) {
 					sound = false;
@@ -130,10 +128,6 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 					client.player.playSound(useSound);
 				}
 				if (!sound && !timeoutExceeded) sound = true;
-				log("Mining speed: " + debugSpeed, time);
-				log("Ticks needed: " + ticksNeeded, time);
-				log("Ping: " + getPing(), time);
-				log("TPS: " + getTPS(), time);
 
 				if (shouldRender()) {
 					POM_RENDER.extractAndDraw(
@@ -145,6 +139,9 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 					);
 				}
 
+				Util.log("Mining speed: " + debugSpeed, time);
+				Util.log("Ticks needed: " + ticksNeeded, time);
+				Util.log("Should render: " + shouldRender(), time);
 			});
 
 		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, outline) -> {

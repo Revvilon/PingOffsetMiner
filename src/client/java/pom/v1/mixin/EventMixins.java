@@ -13,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pom.v1.PingOffsetMinerClient;
 import pom.v1.Util;
 import pom.v1.events.*;
+import pom.v1.pomNetwork.PomPing;
 
 @Mixin(ClientPacketListener.class)
 public class EventMixins {
@@ -65,10 +66,6 @@ public class EventMixins {
                         );
                         PingOffsetMinerClient.EVENT_BUS.post(event);
                     }
-                    if (name.contains("Boost: Available")) {
-                        onTabUpdate event = new onTabUpdate(packet, name);
-                        PingOffsetMinerClient.EVENT_BUS.post(event);
-                    }
                 }
             }
         }
@@ -97,10 +94,12 @@ public class EventMixins {
             }
         }
 
-        @Inject(method = "handlePongResponse(Lnet/minecraft/network/protocol/ping/ClientboundPongResponsePacket;)V", at = @At("HEAD"))
+        @Inject(method = "handlePongResponse", at = @At("HEAD"))
         private void onPing(ClientboundPongResponsePacket packet, CallbackInfo ci) {
-            pingReceivedEvent event = new pingReceivedEvent(packet.time());
-            PingOffsetMinerClient.EVENT_BUS.post(event);
+            if (packet.time() == PomPing.ID) {
+                pingReceivedEvent event = new pingReceivedEvent(packet.time());
+                PingOffsetMinerClient.EVENT_BUS.post(event);
+            }
         }
 
 }

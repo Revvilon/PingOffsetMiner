@@ -11,6 +11,8 @@
 	"icon": "assets/ping-offset-miner/pom128px.png",
 	"environment": "*",
 	"entrypoints": {
+		"main": [
+		],
 		"client": [
 			"pom.v1.PingOffsetMinerClient"
 		],

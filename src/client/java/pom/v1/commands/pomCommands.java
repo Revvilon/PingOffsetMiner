@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
+import pom.v1.PingOffsetMinerClient;
 import pom.v1.Util;
 import pom.v1.modmenu.PomConfig;
 import pom.v1.modmenu.PomGui;
@@ -37,7 +38,7 @@ public class pomCommands {
                         .executes(ctx -> {
                             Util.sendMsg(Component.literal("Your ping is: ")
                                     .withStyle(ChatFormatting.GRAY)
-                                    .append(Component.literal(String.valueOf(Util.getAverage(10)))
+                                    .append(Component.literal(String.valueOf(PingOffsetMinerClient.getPing()))
                                             .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                                     )
                             );
@@ -47,7 +48,7 @@ public class pomCommands {
                         .executes(ctx -> {
                             Util.sendMsg(Component.literal("Your tps is: ")
                                     .withStyle(ChatFormatting.GRAY)
-                                    .append(Component.literal(String.valueOf(round(Util.tps)))
+                                    .append(Component.literal(String.valueOf((int) PingOffsetMinerClient.getTPS()))
                                             .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                                     )
                             );

@@ -22,12 +22,14 @@ public class PomBlockData {
         private VoxelShape shape;
         private long hardness;
         private String name;
+        private Block block;
 
         public PomBlock() {
             this.pos = null;
             this.shape = null;
             this.hardness = -1;
             this.name = "";
+            this.block = null;
         }
 
         public BlockPos getBlockPos() {return this.pos;}
@@ -45,21 +47,24 @@ public class PomBlockData {
                 BlockState blockState = Minecraft.getInstance().level.getBlockState(blockPos);
 
                 Block block = blockState.getBlock();
+                if (block != this.block) {
 
-                String blockName = SpeedCalc.getBlockName(block);
+                    String blockName = SpeedCalc.getBlockName(block);
 
-                if (PomConfig.HANDLER.instance().blockEnabled.getOrDefault(blockName, false)) {
-                    this.shape = blockState.getCollisionShape(client.level, blockPos);
-                    this.pos = blockPos;
-                    this.hardness = SpeedCalc.blockHardness.get(blockName);
-                    this.name = blockName;
-                    return;
-                }
+                    if (PomConfig.HANDLER.instance().blockEnabled.getOrDefault(blockName, false)) {
+                        this.shape = blockState.getCollisionShape(client.level, blockPos);
+                        this.pos = blockPos;
+                        this.hardness = SpeedCalc.blockHardness.get(blockName);
+                        this.name = blockName;
+                        return;
+                    }
+                } else return;
             }
             this.pos = null;
             this.shape = null;
             this.hardness = -1;
             this.name = "";
+            this.block = null;
         }
 
         public boolean isEmpty() {
