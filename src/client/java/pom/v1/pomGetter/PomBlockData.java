@@ -1,21 +1,18 @@
 package pom.v1.pomGetter;
 
-import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import pom.v1.Util;
-import pom.v1.events.worldTickEvent;
-import pom.v1.modmenu.PomConfig;
-
-import static pom.v1.PingOffsetMinerClient.POM_BLOCK;
+import pom.v1.PingOffsetMinerClient;
+import pom.v1.PomConfig.PomConfig;
 
 public class PomBlockData {
+
+    PomConfig Config = PomConfig.HANDLER.instance();
 
     public class PomBlock {
         private BlockPos pos;
@@ -51,7 +48,7 @@ public class PomBlockData {
 
                     String blockName = SpeedCalc.getBlockName(block);
 
-                    if (PomConfig.HANDLER.instance().blockEnabled.getOrDefault(blockName, false)) {
+                    if (PomConfig.Config().blockEnabled.getOrDefault(blockName, false)) {
                         this.shape = blockState.getCollisionShape(client.level, blockPos);
                         this.pos = blockPos;
                         this.hardness = SpeedCalc.blockHardness.get(blockName);

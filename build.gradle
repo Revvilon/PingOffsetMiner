@@ -1,6 +1,7 @@
 plugins {
 	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
 	id 'maven-publish'
+	id 'org.jetbrains.kotlin.jvm'
 }
 
 version = project.mod_version
@@ -11,11 +12,11 @@ base {
 }
 
 repositories {
-
 	maven {
-		name = 'Xander Maven'
-		url = 'https://maven.isxander.dev/releases'
+		name 'Xander Maven'
+		url 'https://maven.isxander.dev/releases'
 	}
+
 	maven {
 		name = "Terraformers"
 		url = "https://maven.terraformersmc.com/"
@@ -25,6 +26,7 @@ repositories {
 		name = "meteor-maven"
 		url = "https://maven.meteordev.org/releases"
 	}
+	mavenCentral()
 	// Add repositories to retrieve artifacts from in here.
 	// You should only use this when depending on other mods because
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
@@ -51,19 +53,28 @@ fabricApi {
 }
 
 dependencies {
+
+	modImplementation("net.fabricmc:fabric-language-kotlin:1.13.9+kotlin.2.3.10")
+
+
+	modImplementation "dev.isxander:yet-another-config-lib:${project.yacl_version}"
+
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+
 	mappings loom.officialMojangMappings()
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
 
-	modImplementation "dev.isxander:yet-another-config-lib:${project.yacl_version}"
-
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-	implementation "meteordevelopment:orbit:0.2.4"
-	annotationProcessor "meteordevelopment:orbit:0.2.4"
+	implementation "meteordevelopment:orbit:${project.orbit_version}"
+	annotationProcessor "meteordevelopment:orbit:${project.orbit_version}"
+	include "meteordevelopment:orbit:${project.orbit_version}"
+
+
+	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
 
 }
@@ -86,8 +97,6 @@ java {
 	// If you remove this line, sources will not be generated.
 	withSourcesJar()
 
-	sourceCompatibility = JavaVersion.VERSION_21
-	targetCompatibility = JavaVersion.VERSION_21
 }
 
 jar {
@@ -114,4 +123,7 @@ publishing {
 		// The repositories here will be used for publishing your artifact, not for
 		// retrieving dependencies.
 	}
+}
+kotlin {
+	jvmToolchain(21)
 }

@@ -1,15 +1,9 @@
 package pom.v1.pomNetwork;
 
 import meteordevelopment.orbit.EventHandler;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.common.ClientboundPingPacket;
-import net.minecraft.network.protocol.common.ServerboundCustomPayloadPacket;
 import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket;
-import net.minecraft.resources.Identifier;
 import pom.v1.PingOffsetMinerClient;
-import pom.v1.Util;
 import pom.v1.events.pingReceivedEvent;
 import pom.v1.events.worldTickEvent;
 

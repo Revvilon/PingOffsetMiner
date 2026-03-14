@@ -4,6 +4,7 @@ import meteordevelopment.orbit.EventBus;
 import meteordevelopment.orbit.IEventBus;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
@@ -13,12 +14,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import pom.v1.PomConfig.PomConfig;
 import pom.v1.commands.pomCommands;
-import pom.v1.modmenu.PomConfig;
 import pom.v1.pomGetter.PomBlockData;
 import pom.v1.pomGetter.PomStats;
 import pom.v1.pomGetter.SpeedCalc;
@@ -42,7 +44,6 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 	public static PomTPS POM_TPS = new PomTPS();
 	public static PomBlockData POM_BLOCK_DATA = new PomBlockData();
 	public static PomBlockData.PomBlock POM_BLOCK = POM_BLOCK_DATA.new PomBlock();
-	public static PomRendering POM_RENDER = new PomRendering();
 
 	// Initialize variables
 	BlockPos currentBlock;
@@ -70,6 +71,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 		EVENT_BUS.subscribe(POM_PING);
 		EVENT_BUS.subscribe(POM_TPS);
 		EVENT_BUS.subscribe(POM_BLOCK_DATA);
+		PomRendering POM_RENDER = new PomRendering();
 
 		PomConfig Config = PomConfig.HANDLER.instance();
 
@@ -84,9 +86,15 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 					!Util.getIsland() ||
 					POM_BLOCK.isEmpty() ||
 					client.player == null ||
-					client.level == null
+					client.level == null ||
+					!TOOL_STATS.isActive()
 			)
 			{
+				log("Config is: " + Config.active, time);
+				log("Block: " + POM_BLOCK.getName(), time);
+				log("Tool is: " + TOOL_STATS.isActive(), time);
+				log("Island is: " + Util.getIsland(), time);
+				log("Debug is: " + Config.debug, time);
 				timeoutExceeded = false;
 				ticksNeeded = -1;
 				startServerTick = -1;
@@ -104,10 +112,6 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 				log("Reset block breaking", time);
 			}
 
-				int ticksElapsed = client.player.tickCount - startServerTick;
-
-				double debugTps = Config.debug ? 20.0 : getTPS();
-				double pingSec = Config.debug ? Config.ping / 1000.0 : getPing() / 1000.0;
 				double debugSpeed = Config.debug ? Config.speed : TOOL_STATS.getSpeed();
 				double extra = Config.extra ? Config.extraVal : 0;
 
@@ -117,14 +121,10 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 
 				ticksNeeded = SpeedCalc.getTicksToBreak((int) POM_BLOCK.getHardness(), debugSpeed);
 
-				double pingOffset = pingSec > 0 && ticksNeeded > 0
-						? ticksNeeded - pingSec * debugTps
-						: ticksNeeded;
-				timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset && client.options.keyAttack.isDown();
 
 				if (sound && timeoutExceeded && Config.sound && client.options.keyAttack.isDown()) {
 					sound = false;
-					SoundEvent useSound = SoundEvent.createVariableRangeEvent(Identifier.parse(Config.soundpath));
+					SoundEvent useSound = SoundEvent.createVariableRangeEvent(Identifier.parse(String.valueOf(SoundEvents.ALLAY_AMBIENT_WITH_ITEM) /*config soundpath*/));
 					client.player.playSound(useSound);
 				}
 				if (!sound && !timeoutExceeded) sound = true;
@@ -142,12 +142,28 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 				Util.log("Mining speed: " + debugSpeed, time);
 				Util.log("Ticks needed: " + ticksNeeded, time);
 				Util.log("Should render: " + shouldRender(), time);
-			});
+		});
+
+		ClientTickEvents.END_CLIENT_TICK.register(event -> {
+			if (event.player == null || POM_BLOCK.isEmpty()) return;
+			int ticksElapsed = event.player.tickCount - startServerTick;
+
+			double debugTps = Config.debug ? 20.0 : getTPS();
+			double pingSec = Config.debug ? Config.ping / 1000.0 : getPing() / 1000.0;
+
+			double pingMath = debugTps * pingSec;
+
+			double pingOffset = ticksNeeded - pingMath > pingMath
+					? ticksNeeded - pingMath
+					: ticksNeeded;
+			timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset && event.options.keyAttack.isDown();
+			Util.log("Ping offset: " +  pingOffset, System.currentTimeMillis());
+		});
 
 		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, outline) -> {
 			if (!POM_BLOCK.isEmpty()) {
 
-				if (Config.debug && Config.lineactive) return false;
+				if (Config.debug && Config.lineactive /*config lineactive*/) return false;
 
 				if (Config.active && Config.lineactive) return !shouldRender();
 

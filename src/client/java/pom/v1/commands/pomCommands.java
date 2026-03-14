@@ -6,9 +6,8 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import pom.v1.PingOffsetMinerClient;
+import pom.v1.PomConfig.PomGui;
 import pom.v1.Util;
-import pom.v1.modmenu.PomConfig;
-import pom.v1.modmenu.PomGui;
 
 import static java.lang.Math.round;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
@@ -30,7 +29,6 @@ public class pomCommands {
                 })
                 .then(literal("restart")
                         .executes(ctx -> {
-                            PomConfig.init();
                             Util.sendMsg(Component.literal("POM config restarted!"));
                             return 1;
                         }))

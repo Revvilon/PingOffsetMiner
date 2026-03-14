@@ -7,9 +7,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
+import pom.v1.PomConfig.PomConfig;
 import pom.v1.Util;
 import pom.v1.events.*;
-import pom.v1.modmenu.PomConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +29,8 @@ public class PomStats {
     ||||
     ||||
      */
-    static PomConfig Config = PomConfig.HANDLER.instance();
 
+    PomConfig Config = PomConfig.Config();
 
     private List<String> getToolTip(ItemStack stack) {
         LocalPlayer player = Minecraft.getInstance().player;
@@ -64,7 +64,7 @@ public class PomStats {
     }
 
     private int getCooldown(ItemStack stack) {
-        if (!Config.ability) return -1;
+        if (Config.ability) return -1;
         Pattern pattern = Pattern.compile("\\s*([0-9.]+)\\s*s");
 
         boolean found = false;
@@ -94,15 +94,18 @@ public class PomStats {
     private double newSpeed = -1;
 
     public class MiningStats {
+
         public ItemStack item = ItemStack.EMPTY;
         public double speed = -1;
         public boolean boost = false;
         public double ticks = -1;
+        public int cd = -1;
 
         public void setItem(ItemStack newItem) {
             if (newItem != this.item) {
                 if (isTool(newItem)) {
                     this.item = newItem;
+                    this.cd = getCooldown(newItem);
                 } else  {
                     this.item = ItemStack.EMPTY;
                 }
@@ -113,10 +116,7 @@ public class PomStats {
         }
 
         public int getCd() {
-            if (isActive()) {
-                return getCooldown(getItem());
-            }
-            return -1;
+            return this.cd;
         }
 
         public void setSpeed(double speed) {
@@ -128,6 +128,7 @@ public class PomStats {
         }
 
         public boolean isActive() {
+            if (PomConfig.Config().debug) return true;
             return this.item != ItemStack.EMPTY;
         }
 
@@ -163,30 +164,29 @@ public class PomStats {
             String raw = event.message.replaceAll("$.", "");
             Matcher matcher = BOOST_PATTERN.matcher(raw);
             if (matcher.matches()) {
-                boostActive = true;
                 TOOL_STATS.setBoost(true);
                 Util.log("MSB enabled!", System.currentTimeMillis());
             }
         }
     }
     int tickCount = 0;
-    public static boolean boostActive = false;
     @EventHandler
     public void onTick(worldTickEvent event) {
         if (Config.ability) {
-            if (boostActive) {
+            if (TOOL_STATS.getBoost()) {
                 tickCount++;
 
                 for (String entry : Util.getTabList()) {
                     if (entry.contains("speed boost: available!")) {
                         tickCount = 0;
+
                         TOOL_STATS.setBoost(false);
                         Util.log("MSB disabled!", System.currentTimeMillis());
                     }
                 }
 
-                if (tickCount >= (TOOL_STATS.getCd() * 20)) {
-                    boostActive = false;
+                if (tickCount >= (TOOL_STATS.getCd() * 20*(20/getTPS()))) {
+                    tickCount = 0;
                     TOOL_STATS.setBoost(false);
                     Util.log("MSB disabled!", System.currentTimeMillis());
                 }

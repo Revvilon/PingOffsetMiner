@@ -5,7 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import pom.v1.modmenu.PomConfig;
+import pom.v1.PomConfig.PomConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,8 +16,6 @@ import java.util.regex.Pattern;
 import static pom.v1.PingOffsetMinerClient.TOOL_STATS;
 
 public class Util {
-
-    public static PomConfig Config = PomConfig.HANDLER.instance();
 
     public static void sendMsg(MutableComponent message) {
         Minecraft mc = Minecraft.getInstance();
@@ -35,7 +33,7 @@ public class Util {
     }
 
     public static Boolean getIsland() {
-        if (Config.debug) return true;
+        if (PomConfig.Config().debug) return true;
 
         for (String entry : Util.getTabList()) {
             if (entry.contains("Dwarven Mines") || entry.contains("Crystal Hollows") || entry.contains("Mineshaft")) {
@@ -134,13 +132,13 @@ public class Util {
     }
 
     public static boolean shouldRender() {
-        if (Config.ability) {
-            switch (Config.msbToggleValue) {
+        if (PomConfig.Config().ability) {
+            switch (PomConfig.Config().msbToggleValue) {
                 case OFF -> {
                     return !TOOL_STATS.getBoost();
                 }
                 case ON -> {
-                    return  TOOL_STATS.getBoost();
+                    return TOOL_STATS.getBoost();
                 }
             }
         }
@@ -149,10 +147,12 @@ public class Util {
 
     static HashMap<String, Long> logs = new HashMap<String, Long>();
     public static void log(String text, Long time) {
-        if (!Config.logging) return;
+        if (!PomConfig.Config().logging) return;
         logs.putIfAbsent(text, 10001L);
         if ((System.currentTimeMillis() - logs.get(text)) <= 2000) return;
         Util.sendMsg(Component.literal(text).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
         logs.replace(text, time);
+
+
     }
 }

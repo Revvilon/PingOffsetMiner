@@ -22,7 +22,7 @@ import org.joml.Matrix4fc;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryUtil;
-import pom.v1.modmenu.PomConfig;
+import pom.v1.PomConfig.PomConfig;
 
 import java.awt.*;
 import java.util.OptionalInt;
@@ -33,27 +33,27 @@ import static pom.v1.PingOffsetMinerClient.*;
 
 public class PomRendering {
 
-    public static PomRendering instance = new PomRendering();
-    // Config instance
-    public static PomConfig Config = PomConfig.HANDLER.instance();
+    PomConfig Config = PomConfig.Config();
 
-    // Custom pipeline box
-    private static final RenderPipeline FILLED_THROUGH_WALLS = RenderPipelines.register(
-            RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
-                    .withLocation(Identifier.fromNamespaceAndPath(MOD_ID, "pipeline/debug_filled_through_walls"))
-                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-                    .withCull(false)
-                    .build()
-    );
+    private static final PomRendering instance = new PomRendering();
 
-    // Custom pipeline lines
-    private static final RenderPipeline LINES_RENDER = RenderPipelines.register(
-            RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
-                    .withLocation(Identifier.fromNamespaceAndPath(MOD_ID, "pipeline/debug_lines_render"))
-                    .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-                    .withCull(false)
-                    .build()
-    );
+        public static RenderPipeline FILLED_THROUGH_WALLS = RenderPipelines.register(
+                RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
+                        .withLocation(Identifier.fromNamespaceAndPath(MOD_ID, "pipeline/debug_filled_through_walls"))
+                        .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+                        .withCull(false)
+                        .build()
+        );
+
+        // Custom pipeline lines
+        public static RenderPipeline LINES_RENDER = RenderPipelines.register(
+                RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
+                        .withLocation(Identifier.fromNamespaceAndPath(MOD_ID, "pipeline/debug_lines_render"))
+                        .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
+                        .withCull(false)
+                        .build()
+        );
+
 
     private static final ByteBufferBuilder allocator = new ByteBufferBuilder(RenderType.SMALL_BUFFER_SIZE);
     private BufferBuilder buffer;
@@ -72,16 +72,16 @@ public class PomRendering {
     public void extractAndDraw(WorldRenderContext context, Minecraft client, BlockPos pos, VoxelShape shape, boolean timeoutExceeded) {
 
             if (Config.blockactive) {
-                renderWaypoint(context, shape, pos, timeoutExceeded ? Config.blockCol2 : Config.blockCol1);
+                renderWaypoint(context, shape, pos, !timeoutExceeded ? Config.blockCol1 : Config.blockCol2);
                 drawFilledThroughWalls(client, FILLED_THROUGH_WALLS);
             }
             if (Config.lineactive) {
-                renderOutline(context, shape, pos, timeoutExceeded ? Config.color2 : Config.color1);
+                renderOutline(context, shape, pos, !timeoutExceeded ? Config.color1 : Config.color2, (float) Config.lineWidth);
                 drawFilledThroughWalls(client, LINES_RENDER);
             }
     }
 
-    private void renderOutline(WorldRenderContext context, VoxelShape shape, BlockPos pos, Color color) {
+    private void renderOutline(WorldRenderContext context, VoxelShape shape, BlockPos pos, Color color, float lineWidth) {
         PoseStack matrices = context.matrices();
         Vec3 camera = context.worldState().cameraRenderState.pos;
 
@@ -104,11 +104,11 @@ public class PomRendering {
             buffer.addVertex(matrix, (float) minX, (float) minY, (float) minZ)
                     .setColor((float) color.getRed() / 255,  (float) color.getGreen() / 255, (float) color.getBlue() / 255, (float) color.getAlpha() / 255)
                     .setNormal(dir.x, dir.y, dir.z)
-                    .setLineWidth((float) Config.lineWidth);
+                    .setLineWidth(lineWidth);
             buffer.addVertex(matrix, (float) maxX, (float)  maxY, (float) maxZ)
                     .setColor((float) color.getRed() / 255,  (float) color.getGreen() / 255, (float) color.getBlue() / 255, (float) color.getAlpha() / 255)
                     .setNormal(dir.x, dir.y, dir.z)
-                    .setLineWidth((float) Config.lineWidth);
+                    .setLineWidth(lineWidth);
         });
 
         matrices.popPose();
