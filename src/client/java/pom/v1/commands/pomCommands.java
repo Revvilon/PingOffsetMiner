@@ -6,6 +6,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import pom.v1.PingOffsetMinerClient;
+import pom.v1.PomConfig.PomConfig;
 import pom.v1.PomConfig.PomGui;
 import pom.v1.Util;
 
@@ -50,6 +51,21 @@ public class pomCommands {
                                             .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                                     )
                             );
+                            return 1;
+                        }))
+                .then(literal("igetit")
+                        .executes(ctx -> {
+                            Util.sendMsg(Component.literal("Disabled warning message")
+                                    .withStyle(ChatFormatting.WHITE));
+                            PomConfig.Config().shouldWarn = false;
+                            return 1;
+                        })
+                )
+                .then(literal("idontgetit")
+                        .executes(ctx -> {
+                            Util.sendMsg(Component.literal("Enabled warning message")
+                                    .withStyle(ChatFormatting.WHITE));
+                            PomConfig.Config().shouldWarn = true;
                             return 1;
                         }))
         );

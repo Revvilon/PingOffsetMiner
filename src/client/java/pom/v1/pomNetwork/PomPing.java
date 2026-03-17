@@ -1,9 +1,15 @@
 package pom.v1.pomNetwork;
 
+import com.google.common.util.concurrent.UncheckedTimeoutException;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.common.ServerboundPongPacket;
+import net.minecraft.network.protocol.game.ServerboundClientCommandPacket;
 import net.minecraft.network.protocol.ping.ServerboundPingRequestPacket;
+import net.minecraft.util.debugchart.LocalSampleLogger;
 import pom.v1.PingOffsetMinerClient;
+import pom.v1.Util;
 import pom.v1.events.pingReceivedEvent;
 import pom.v1.events.worldTickEvent;
 
@@ -15,18 +21,12 @@ public class PomPing {
     /// CODE BELOW TAKEN FROM PROPERERPING
     /// https://github.com/freegamerskids/PropererPing
 
-    public static final long ID = (long) -(PingOffsetMinerClient.MOD_ID.hashCode()) * 20;
+    public static final int ID =  (PingOffsetMinerClient.MOD_ID.hashCode());
     private static long lastPing = -1;
 
     ConcurrentLinkedQueue<Long> latencies =  new ConcurrentLinkedQueue<>();
 
-    final int MAX_LATENCIES = 5;
-
-    void receivedPacket(long startTime) {
-        long currentTime = System.currentTimeMillis();
-        long latency = currentTime - startTime;
-        addLatency(latency);
-    }
+    final int MAX_LATENCIES = 20;
 
     private void addLatency(long latency) {
         latencies.add(latency);
@@ -45,28 +45,8 @@ public class PomPing {
         latencies.clear();
     }
 
-    void sendQueryPing(Minecraft client) {
-        if (client.getConnection() != null) {
-            ServerboundPingRequestPacket packet = new ServerboundPingRequestPacket(ID);
-            lastPing = System.currentTimeMillis();
-            client.getConnection().send(packet);
-        }
-    }
-
-    private int tickCount = 0;
-    @EventHandler
-    public void tick(worldTickEvent event) {
-        tickCount++;
-        if (tickCount > 20) {
-            tickCount = 0;
-            sendQueryPing(Minecraft.getInstance());
-        }
-    }
-
     @EventHandler
     public void pingReceivedEvent(pingReceivedEvent event) {
-        if (lastPing != -1) {
-            receivedPacket(lastPing);
-        }
+        addLatency(event.time);
     }
 }

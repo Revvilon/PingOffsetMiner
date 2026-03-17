@@ -1,5 +1,6 @@
 package pom.v1.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.LocalPlayer;
@@ -48,13 +49,13 @@ public class EventMixins {
             PingOffsetMinerClient.EVENT_BUS.post(event);
         }
 
-        @Inject(method = "handleLogin", at = @At("TAIL"))
+    @Inject(method = "handleLogin", at = @At("TAIL"))
         private void onGameJoin(ClientboundLoginPacket packet, CallbackInfo ci) {
             gameJoinedEvent event = new gameJoinedEvent();
             PingOffsetMinerClient.EVENT_BUS.post(event);
         }
 
-        @Inject(method = "handlePlayerInfoUpdate", at = @At("TAIL"))
+    @Inject(method = "handlePlayerInfoUpdate", at = @At("TAIL"))
         private void onHandlePlayerInfoUpdate(ClientboundPlayerInfoUpdatePacket packet, CallbackInfo ci) {
             Util.updateTab();
             for (ClientboundPlayerInfoUpdatePacket.Entry entry : packet.entries()) {
@@ -70,13 +71,13 @@ public class EventMixins {
             }
         }
 
-        @Inject(method = "tick", at = @At("TAIL"))
+    @Inject(method = "tick", at = @At("TAIL"))
         private void onTick(CallbackInfo ci) {
             worldTickEvent event = new worldTickEvent();
             PingOffsetMinerClient.EVENT_BUS.post(event);
         }
 
-        @Inject(method = "handleSetPlayerInventory", at = @At("TAIL"))
+    @Inject(method = "handleSetPlayerInventory", at = @At("TAIL"))
         private void onLoad(CallbackInfo ci) {
             if (Minecraft.getInstance().player != null) {
                 onHeldSlot event = new onHeldSlot(
@@ -92,14 +93,14 @@ public class EventMixins {
                     PingOffsetMinerClient.EVENT_BUS.post(event);
                 }
             }
-        }
+    }
 
-        @Inject(method = "handlePongResponse", at = @At("HEAD"))
-        private void onPing(ClientboundPongResponsePacket packet, CallbackInfo ci) {
-            if (packet.time() == PomPing.ID) {
-                pingReceivedEvent event = new pingReceivedEvent(packet.time());
-                PingOffsetMinerClient.EVENT_BUS.post(event);
-            }
-        }
+    @ModifyExpressionValue(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/components/DebugScreenOverlay;showNetworkCharts()Z"))
+    private boolean shouldSendPing(boolean original) {
+        return true;
+    }
+
+
+
 
 }

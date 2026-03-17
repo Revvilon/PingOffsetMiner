@@ -36,8 +36,10 @@ public class Util {
         if (PomConfig.Config().debug) return true;
 
         for (String entry : Util.getTabList()) {
-            if (entry.contains("Dwarven Mines") || entry.contains("Crystal Hollows") || entry.contains("Mineshaft")) {
-                return true;
+            String line = entry.replaceFirst("^Area: ", "");
+            if (PomConfig.Config().islandEnabled.containsKey(line)) {
+
+                return PomConfig.Config().islandEnabled.get(line);
             }
         }
 

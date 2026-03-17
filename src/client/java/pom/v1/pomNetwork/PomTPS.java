@@ -1,12 +1,11 @@
 package pom.v1.pomNetwork;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.chat.Component;
-import pom.v1.Util;
+import net.minecraft.client.Minecraft;
 import pom.v1.events.gameJoinedEvent;
 import pom.v1.events.tpsReceivedEvent;
+import pom.v1.events.worldTickEvent;
 
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class PomTPS {
@@ -42,6 +41,7 @@ public class PomTPS {
         return Math.min(20.0, tps);
     }
 
+
     @EventHandler
     public void onTPS(tpsReceivedEvent event) {
         addLatency(event.time);
@@ -51,4 +51,5 @@ public class PomTPS {
         tickIntervals.clear();
         lastUpdate = System.currentTimeMillis();
     }
+
 }

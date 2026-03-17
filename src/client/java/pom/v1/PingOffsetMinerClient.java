@@ -11,7 +11,7 @@ import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.*;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -172,14 +172,19 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 		});
 
 
+		MutableComponent warnText = Component.literal("[I GET IT]")
+						.withStyle()
+								.setStyle(Style.EMPTY
+										.withHoverEvent(new HoverEvent.ShowText(Component.literal("Click to disable this message")))
+										.withClickEvent(new ClickEvent.RunCommand("/pom igetit")));
+
 		AttackBlockCallback.EVENT.register((player, level, hand, blockpos, hr) -> {
 
-			if (!Util.foundSpeed() && !Config.debug && Config.active && Util.getIsland()) {
+			if (!Util.foundSpeed() && !Config.debug && Config.active && Util.getIsland() && Config.shouldWarn) {
 				Util.sendMsg(Component.literal("Mining Speed not found! Please enable in tab widget").withStyle(ChatFormatting.RED));
 				Util.sendMsg(Component.literal("To enable: /tab -> Stats Widget -> Shown Stats -> Mining Speed").withStyle(ChatFormatting.RED));
 				Util.sendMsg(Component.literal("Make sure that the mining speed stat is visible in your tab menu").withStyle(ChatFormatting.RED));
-
-				return InteractionResult.FAIL;
+				Util.sendMsg(warnText.withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD, ChatFormatting.ITALIC));
 			}
 
 			return InteractionResult.PASS;
