@@ -14,7 +14,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.*;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.slf4j.Logger;
@@ -124,7 +123,8 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 
 				if (sound && timeoutExceeded && Config.sound && client.options.keyAttack.isDown()) {
 					sound = false;
-					SoundEvent useSound = SoundEvent.createVariableRangeEvent(Identifier.parse(String.valueOf(SoundEvents.ALLAY_AMBIENT_WITH_ITEM) /*config soundpath*/));
+					String soundPath = Config.soundpath.isEmpty() ? "minecraft:entity.allay.ambient_with_item" : Config.soundpath;
+					SoundEvent useSound = SoundEvent.createVariableRangeEvent(Identifier.parse(soundPath));
 					client.player.playSound(useSound);
 				}
 				if (!sound && !timeoutExceeded) sound = true;
