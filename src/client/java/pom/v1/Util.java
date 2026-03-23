@@ -126,7 +126,7 @@ public class Util {
 
     static HashMap<String, Long> logs = new HashMap<String, Long>();
     public static void log(String text, Long time) {
-        if (Config().logging) return;
+        if (!Config().logging) return;
         logs.putIfAbsent(text, 10001L);
         if ((System.currentTimeMillis() - logs.get(text)) <= 2000) return;
         Util.sendMsg(Component.literal(text).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
