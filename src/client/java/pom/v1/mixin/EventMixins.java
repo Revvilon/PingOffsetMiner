@@ -5,7 +5,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.protocol.game.*;
-import net.minecraft.network.protocol.ping.ClientboundPongResponsePacket;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -14,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import pom.v1.PingOffsetMinerClient;
 import pom.v1.Util;
 import pom.v1.events.*;
-import pom.v1.pomNetwork.PomPing;
 
 @Mixin(ClientPacketListener.class)
 public class EventMixins {

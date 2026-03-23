@@ -10,7 +10,6 @@ import pom.v1.PomConfig.PomConfig;
 import pom.v1.PomConfig.PomGui;
 import pom.v1.Util;
 
-import static java.lang.Math.round;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 
 public class pomCommands {
@@ -20,9 +19,7 @@ public class pomCommands {
                     Minecraft client = Minecraft.getInstance();
                     
                     if (client.player == null) return 1;
-                    client.execute(() -> {
-                        client.setScreen(PomGui.createScreen(null));
-                    });
+                    client.execute(() -> client.setScreen(PomGui.createScreen(null)));
                     Util.sendMsg(Component.literal("Opened config!")
                             .withStyle(ChatFormatting.WHITE, ChatFormatting.BOLD)
                     );

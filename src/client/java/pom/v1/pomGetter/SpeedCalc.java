@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.Blocks;
 import java.util.HashMap;
 
 public class SpeedCalc {
-    public final static HashMap<String, Integer> blockHardness = new HashMap<String, Integer>() {{
+    public final static HashMap<String, Integer> blockHardness = new HashMap<>() {{
 
         // https://hypixel-skyblock.fandom.com/wiki/Block_Strength
         put("minecraft:obsidian", 500);

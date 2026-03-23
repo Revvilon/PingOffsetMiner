@@ -14,12 +14,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.*;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import pom.v1.PomConfig.PomConfig;
 import pom.v1.commands.pomCommands;
 import pom.v1.pomGetter.PomBlockData;
 import pom.v1.pomGetter.PomStats;
@@ -31,19 +27,18 @@ import pom.v1.render.PomRendering;
 import java.lang.invoke.MethodHandles;
 import java.util.Objects;
 
-import static pom.v1.Util.log;
-import static pom.v1.Util.shouldRender;
+import static pom.v1.PomConfig.PomConfig.Config;
+import static pom.v1.Util.*;
 
 public class PingOffsetMinerClient implements ClientModInitializer {
 	public static final String MOD_ID = "ping-offset-miner";
-	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	public static final IEventBus EVENT_BUS = new EventBus();
 	public static PomStats POM_STATS = new PomStats();
 	public static PomStats.MiningStats TOOL_STATS = POM_STATS.new MiningStats();
 	public static PomPing POM_PING = new PomPing();
 	public static PomTPS POM_TPS = new PomTPS();
 	public static PomBlockData POM_BLOCK_DATA = new PomBlockData();
-	public static PomBlockData.PomBlock POM_BLOCK = POM_BLOCK_DATA.new PomBlock();
+	public static PomBlockData.PomBlock POM_BLOCK = new PomBlockData.PomBlock();
 
 	// Initialize variables
 	BlockPos currentBlock;
@@ -54,7 +49,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		PomConfig.init();
+		pom.v1.PomConfig.PomConfig.init();
 
 
 		EVENT_BUS.registerLambdaFactory("pom.v1", (lookupInMethod, klass) -> {
@@ -73,7 +68,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 		EVENT_BUS.subscribe(POM_BLOCK_DATA);
 		PomRendering POM_RENDER = new PomRendering();
 
-		PomConfig Config = PomConfig.HANDLER.instance();
+
 
 		WorldRenderEvents.BEFORE_TRANSLUCENT.register(event -> {
 			Minecraft client = Minecraft.getInstance();
@@ -82,7 +77,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 			POM_BLOCK.setBlock(client);
 
 			if (
-					!Config.active ||
+					!Config().active ||
 					!Util.getIsland() ||
 					POM_BLOCK.isEmpty() ||
 					client.player == null ||
@@ -90,17 +85,17 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 					!TOOL_STATS.isActive()
 			)
 			{
-				log("Config is: " + Config.active, time);
+				log("Config is: " + Config().active, time);
 				log("Block: " + POM_BLOCK.getName(), time);
 				log("Tool is: " + TOOL_STATS.isActive(), time);
 				log("Island is: " + Util.getIsland(), time);
-				log("Debug is: " + Config.debug, time);
+				log("Debug is: " + Config().debug, time);
 				timeoutExceeded = false;
 				ticksNeeded = -1;
 				startServerTick = -1;
 				currentBlock = null;
 				return;
-			};
+			}
 
 			VoxelShape blockShape = POM_BLOCK.getShape();
 			BlockPos blockPos = POM_BLOCK.getBlockPos();
@@ -112,8 +107,8 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 				log("Reset block breaking", time);
 			}
 
-				double debugSpeed = Config.debug ? Config.speed : TOOL_STATS.getSpeed();
-				double extra = Config.extra ? Config.extraVal : 0;
+				double debugSpeed = Config().debug ? Config().speed : TOOL_STATS.getSpeed();
+				double extra = Config().extra ? Config().extraVal : 0;
 
 				if (POM_BLOCK.getName().contains("gem")) {
 					debugSpeed = debugSpeed + extra;
@@ -122,9 +117,9 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 				ticksNeeded = SpeedCalc.getTicksToBreak((int) POM_BLOCK.getHardness(), debugSpeed);
 
 
-				if (sound && timeoutExceeded && Config.sound && client.options.keyAttack.isDown()) {
+				if (sound && timeoutExceeded && Config().sound && client.options.keyAttack.isDown()) {
 					sound = false;
-					SoundEvent useSound = SoundEvent.createVariableRangeEvent(Identifier.parse(String.valueOf(SoundEvents.ALLAY_AMBIENT_WITH_ITEM) /*config soundpath*/));
+					SoundEvent useSound = SoundEvent.createVariableRangeEvent(Identifier.parse(String.valueOf(Config().soundpath)));
 					client.player.playSound(useSound);
 				}
 				if (!sound && !timeoutExceeded) sound = true;
@@ -148,8 +143,8 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 			if (event.player == null || POM_BLOCK.isEmpty()) return;
 			int ticksElapsed = event.player.tickCount - startServerTick;
 
-			double debugTps = Config.debug ? 20.0 : getTPS();
-			double pingSec = Config.debug ? Config.ping / 1000.0 : getPing() / 1000.0;
+			double debugTps = Config().debug ? 20.0 : getTPS();
+			double pingSec = Config().debug ? Config().ping / 1000.0 : getPing() / 1000.0;
 
 			double pingMath = debugTps * pingSec;
 
@@ -157,15 +152,14 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 					? ticksNeeded - pingMath
 					: ticksNeeded;
 			timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset && event.options.keyAttack.isDown();
-			Util.log("Ping offset: " +  pingOffset, System.currentTimeMillis());
 		});
 
 		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, outline) -> {
-			if (!POM_BLOCK.isEmpty()) {
+			if (!POM_BLOCK.isEmpty() || !getIsland()) {
 
-				if (Config.debug && Config.lineactive /*config lineactive*/) return false;
+				if (Config().debug && Config().line.active) return false;
 
-				if (Config.active && Config.lineactive) return !shouldRender();
+				if (Config().active && Config().line.active) return !shouldRender();
 
 			}
 			return true;
@@ -180,7 +174,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 
 		AttackBlockCallback.EVENT.register((player, level, hand, blockpos, hr) -> {
 
-			if (!Util.foundSpeed() && !Config.debug && Config.active && Util.getIsland() && Config.shouldWarn) {
+			if (!Util.foundSpeed() && !Config().debug && Config().active && Util.getIsland() && Config().shouldWarn) {
 				Util.sendMsg(Component.literal("Mining Speed not found! Please enable in tab widget").withStyle(ChatFormatting.RED));
 				Util.sendMsg(Component.literal("To enable: /tab -> Stats Widget -> Shown Stats -> Mining Speed").withStyle(ChatFormatting.RED));
 				Util.sendMsg(Component.literal("Make sure that the mining speed stat is visible in your tab menu").withStyle(ChatFormatting.RED));
@@ -192,9 +186,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> POM_PING.clear());
 
-		ClientCommandRegistrationCallback.EVENT.register((commandDispatcher, commandRegistryAccess) -> {
-			pomCommands.register(commandDispatcher);
-		});
+		ClientCommandRegistrationCallback.EVENT.register((commandDispatcher, commandRegistryAccess) -> pomCommands.register(commandDispatcher));
 	}
 
 	public static double getTPS() {

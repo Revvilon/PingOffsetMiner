@@ -3,18 +3,17 @@ package pom.v1.pomGetter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import pom.v1.PingOffsetMinerClient;
 import pom.v1.PomConfig.PomConfig;
+import pom.v1.Util;
 
 public class PomBlockData {
 
-    PomConfig Config = PomConfig.HANDLER.instance();
-
-    public class PomBlock {
+    public static class PomBlock {
         private BlockPos pos;
         private VoxelShape shape;
         private long hardness;
@@ -47,6 +46,8 @@ public class PomBlockData {
                 if (block != this.block) {
 
                     String blockName = SpeedCalc.getBlockName(block);
+
+                    if (block == Blocks.COBBLESTONE && Util.getArea().contains("Mineshaft")) blockName = SpeedCalc.getBlockName(Blocks.INFESTED_COBBLESTONE);
 
                     if (PomConfig.Config().blockEnabled.getOrDefault(blockName, false)) {
                         this.shape = blockState.getCollisionShape(client.level, blockPos);

@@ -27,13 +27,13 @@ import pom.v1.PomConfig.PomConfig;
 import java.awt.*;
 import java.util.OptionalInt;
 
-import static pom.v1.PingOffsetMinerClient.*;
-
+import static pom.v1.PingOffsetMinerClient.MOD_ID;
+import static pom.v1.PomConfig.PomConfig.Config;
 
 
 public class PomRendering {
 
-    PomConfig Config = PomConfig.Config();
+    PomConfig Config = Config();
 
     private static final PomRendering instance = new PomRendering();
 
@@ -71,12 +71,12 @@ public class PomRendering {
 
     public void extractAndDraw(WorldRenderContext context, Minecraft client, BlockPos pos, VoxelShape shape, boolean timeoutExceeded) {
 
-            if (Config.blockactive) {
-                renderWaypoint(context, shape, pos, !timeoutExceeded ? Config.blockCol1 : Config.blockCol2);
+            if (Config.highlight.active) {
+                renderWaypoint(context, shape, pos, !timeoutExceeded ? Config().highlight.c1 : Config().highlight.c2);
                 drawFilledThroughWalls(client, FILLED_THROUGH_WALLS);
             }
-            if (Config.lineactive) {
-                renderOutline(context, shape, pos, !timeoutExceeded ? Config.color1 : Config.color2, (float) Config.lineWidth);
+            if (Config.line.active) {
+                renderOutline(context, shape, pos, !timeoutExceeded ? Config().line.c1 : Config().line.c2, (float) Config().line.width);
                 drawFilledThroughWalls(client, LINES_RENDER);
             }
     }
@@ -130,15 +130,13 @@ public class PomRendering {
             buffer = new BufferBuilder(allocator, FILLED_THROUGH_WALLS.getVertexFormatMode(), FILLED_THROUGH_WALLS.getVertexFormat());
         }
 
-        shape.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> {
-            renderFilledBox(
-                    matrices.last().pose(),
-                    buffer,
-                    (float) minX, (float) minY, (float) minZ,
-                    (float) maxX, (float) maxY, (float) maxZ,
-                    (float) color.getRed() / 255, (float) color.getGreen() / 255, (float) color.getBlue() / 255, (float) color.getAlpha() / 255
-            );
-        });
+        shape.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> renderFilledBox(
+                matrices.last().pose(),
+                buffer,
+                (float) minX, (float) minY, (float) minZ,
+                (float) maxX, (float) maxY, (float) maxZ,
+                (float) color.getRed() / 255, (float) color.getGreen() / 255, (float) color.getBlue() / 255, (float) color.getAlpha() / 255
+        ));
         matrices.popPose();
     }
 

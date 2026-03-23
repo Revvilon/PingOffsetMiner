@@ -1,17 +1,14 @@
 package pom.v1.pomNetwork;
 
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.Minecraft;
 import pom.v1.events.gameJoinedEvent;
 import pom.v1.events.tpsReceivedEvent;
-import pom.v1.events.worldTickEvent;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class PomTPS {
 
-    private ConcurrentLinkedQueue<Float> tickIntervals =  new ConcurrentLinkedQueue<>();
-    private final int MAX = 20;
+    private final ConcurrentLinkedQueue<Float> tickIntervals =  new ConcurrentLinkedQueue<>();
     private long lastUpdate = -1;
 
     private void addLatency(long realTime) {
@@ -21,6 +18,7 @@ public class PomTPS {
 
         tickIntervals.add((float) timeElapsed);
 
+        int MAX = 20;
         while (tickIntervals.size() > MAX) {
             tickIntervals.poll();
         }

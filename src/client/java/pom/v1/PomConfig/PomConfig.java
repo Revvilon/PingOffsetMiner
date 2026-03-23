@@ -1,13 +1,10 @@
 package pom.v1.PomConfig;
 
 import com.google.gson.GsonBuilder;
-import com.mojang.blaze3d.platform.DepthTestFunction;
-import dev.isxander.yacl3.api.NameableEnum;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 
 import java.awt.*;
@@ -22,30 +19,16 @@ public class PomConfig {
                     .build())
             .build();
 
+
     public static PomConfig Config() {
         return HANDLER.instance();
     }
 
     @SerialEntry
-    public Color color1 = new Color(255, 0,0, 255);
-
+    public renderSettings line = renderSettings.lines();
     @SerialEntry
-    public Color color2 = new Color(0, 255, 0, 255);
+    public renderSettings highlight = renderSettings.highlight();
 
-    @SerialEntry
-    public Color blockCol1 = new Color(255, 0, 0, 50);
-
-    @SerialEntry
-    public Color blockCol2 = new Color(0, 255, 0, 50);
-
-    @SerialEntry
-    public boolean lineactive = true;
-
-    @SerialEntry
-    public double lineWidth = 1.0;
-
-    @SerialEntry
-    public boolean blockactive = true;
 
     @SerialEntry
     public boolean active = true;
@@ -110,7 +93,8 @@ public class PomConfig {
     public static void init() {
         HANDLER.load();
     }
-    public static void save() {
+    public void save() {
         HANDLER.save();
     }
 }
+

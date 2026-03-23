@@ -14,6 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static pom.v1.PingOffsetMinerClient.TOOL_STATS;
+import static pom.v1.PomConfig.PomConfig.Config;
 
 public class Util {
 
@@ -35,15 +36,20 @@ public class Util {
     public static Boolean getIsland() {
         if (PomConfig.Config().debug) return true;
 
+        if (Config().islandEnabled.getOrDefault(getArea(), false)) return true;
+
+        return false;
+    }
+
+    public static String getArea() {
         for (String entry : Util.getTabList()) {
             String line = entry.replaceFirst("^Area: ", "");
             if (PomConfig.Config().islandEnabled.containsKey(line)) {
 
-                return PomConfig.Config().islandEnabled.get(line);
+                return line;
             }
         }
-
-        return false;
+        return "";
     }
 
     public class PingTracker {
@@ -54,35 +60,6 @@ public class Util {
 
     public static double getAverage(int sampleCount) {
         return (int) PingTracker.lastPing;
-        /*
-                Minecraft client = Minecraft.getInstance();
-
-        SampleStorage log;
-
-        DebugScreenOverlay debugHud = (client.gui.getDebugOverlay());
-        log = debugHud.getPingLogger();
-
-
-        int availableEntries = Math.min(sampleCount, log.size());
-        if (availableEntries <= 0) {
-            PingOffsetMinerClient.LOGGER.warn("No entries found!");
-            return 0;
-        }
-
-        long total = 0;
-        int count = 0;
-
-        for (int i = 0; i < availableEntries; i++) {
-            long sample = log.get(i, 0);
-
-            if (sample > 0) {
-                total += sample;
-                count++;
-            }
-        }
-        PingOffsetMinerClient.LOGGER.warn("Found " + count + " entries for " + sampleCount + " samples");
-        return count > 0 ? (double) total / count : 0;
-         */
     }
 
     public static double tps = 20;
@@ -134,8 +111,8 @@ public class Util {
     }
 
     public static boolean shouldRender() {
-        if (PomConfig.Config().ability) {
-            switch (PomConfig.Config().msbToggleValue) {
+        if (Config().ability) {
+            switch (Config().msbToggleValue) {
                 case OFF -> {
                     return !TOOL_STATS.getBoost();
                 }
@@ -149,7 +126,7 @@ public class Util {
 
     static HashMap<String, Long> logs = new HashMap<String, Long>();
     public static void log(String text, Long time) {
-        if (!PomConfig.Config().logging) return;
+        if (Config().logging) return;
         logs.putIfAbsent(text, 10001L);
         if ((System.currentTimeMillis() - logs.get(text)) <= 2000) return;
         Util.sendMsg(Component.literal(text).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));

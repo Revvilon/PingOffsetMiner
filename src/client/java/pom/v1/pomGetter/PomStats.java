@@ -7,9 +7,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
-import pom.v1.PomConfig.PomConfig;
 import pom.v1.Util;
-import pom.v1.events.*;
+import pom.v1.events.onChatMessage;
+import pom.v1.events.onHeldSlot;
+import pom.v1.events.onSpeedUpdate;
+import pom.v1.events.worldTickEvent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static pom.v1.PingOffsetMinerClient.*;
+import static pom.v1.PomConfig.PomConfig.Config;
 
 public class PomStats {
 
@@ -29,8 +32,6 @@ public class PomStats {
     ||||
     ||||
      */
-
-    PomConfig Config = PomConfig.Config();
 
     private List<String> getToolTip(ItemStack stack) {
         LocalPlayer player = Minecraft.getInstance().player;
@@ -64,7 +65,7 @@ public class PomStats {
     }
 
     private int getCooldown(ItemStack stack) {
-        if (Config.ability) return -1;
+        if (!Config().ability) return -1;
         Pattern pattern = Pattern.compile("\\s*([0-9.]+)\\s*s");
 
         boolean found = false;
@@ -90,56 +91,43 @@ public class PomStats {
         return -1;
     }
 
-    private double previousSpeed = -1;
-    private double newSpeed = -1;
 
     public class MiningStats {
 
-        public ItemStack item = ItemStack.EMPTY;
-        public double speed = -1;
-        public boolean boost = false;
-        public double ticks = -1;
-        public int cd = -1;
+        private ItemStack item = ItemStack.EMPTY;
+        private double speed = -1;
+        private boolean boost = false;
+        private int cd = -1;
 
         public void setItem(ItemStack newItem) {
-            if (newItem != this.item) {
-                if (isTool(newItem)) {
-                    this.item = newItem;
-                    this.cd = getCooldown(newItem);
-                } else  {
-                    this.item = ItemStack.EMPTY;
-                }
+            if (newItem == this.item) return;
+            if (isTool(newItem)) {
+                this.item = newItem;
+                this.cd = getCooldown(newItem);
+            } else {
+                this.item = ItemStack.EMPTY;
+                this.cd = -1;
             }
-        }
-        public ItemStack getItem() {
-            return this.item;
-        }
-
-        public int getCd() {
-            return this.cd;
         }
 
         public void setSpeed(double speed) {
-            this.ticks = SpeedCalc.getTicksToBreak((int) POM_BLOCK.getHardness(), speed);
+            if (this.speed == speed) return;
+
             this.speed = speed;
-        }
-        public double getSpeed() {
-            return this.speed;
         }
 
         public boolean isActive() {
-            if (PomConfig.Config().debug) return true;
-            return this.item != ItemStack.EMPTY;
+            return Config().debug || !this.item.isEmpty();
         }
-
 
         public void setBoost(boolean boost) {
             this.boost = boost;
         }
 
-        public boolean getBoost() {
-            return this.boost;
-        }
+
+        public int getCd() { return this.cd; }
+        public double getSpeed() { return this.speed; }
+        public boolean getBoost() { return this.boost; }
     }
 
     @EventHandler
@@ -149,7 +137,7 @@ public class PomStats {
 
     @EventHandler
     public void onSpeedUpdate(onSpeedUpdate event) {
-        if (TOOL_STATS.isActive()) {
+        if (TOOL_STATS.isActive() && Util.shouldRender()) {
             TOOL_STATS.setSpeed(event.speed);
         }
     }
@@ -160,7 +148,7 @@ public class PomStats {
 
     @EventHandler
     public void onChatMessage(onChatMessage event) {
-        if (Config.ability) {
+        if (Config().ability) {
             String raw = event.message.replaceAll("$.", "");
             Matcher matcher = BOOST_PATTERN.matcher(raw);
             if (matcher.matches()) {
@@ -172,8 +160,7 @@ public class PomStats {
     int tickCount = 0;
     @EventHandler
     public void onTick(worldTickEvent event) {
-        if (Config.ability) {
-            if (TOOL_STATS.getBoost()) {
+        if (Config().ability && TOOL_STATS.getBoost()) {
                 tickCount++;
 
                 for (String entry : Util.getTabList()) {
@@ -190,7 +177,6 @@ public class PomStats {
                     TOOL_STATS.setBoost(false);
                     Util.log("MSB disabled!", System.currentTimeMillis());
                 }
-            }
         }
     }
 }

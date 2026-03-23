@@ -3,7 +3,7 @@ package pom.v1.pomGetter;
 import java.util.HashMap;
 
 public class PomIslandData {
-    private static HashMap<String, Boolean> islands = new  HashMap<>() {{
+    private static final HashMap<String, Boolean> islands = new  HashMap<>() {{
         put("Private Island", false);
         put("Garden", false);
         put("Hub", false);
