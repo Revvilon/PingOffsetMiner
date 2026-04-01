@@ -1,74 +1,111 @@
 package pom.v1.PomConfig;
 
 import com.google.gson.GsonBuilder;
+import com.mojang.blaze3d.platform.DepthTestFunction;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.Identifier;
+import pom.v1.PomConfig.dataHolder.renderSettings;
+import pom.v1.PomConfig.dataHolder.textSettings;
+import pom.v1.pomGetter.PomBlockData;
+import pom.v1.pomGetter.PomBlocks;
+import pom.v1.pomGetter.PomIslandData;
+import pom.v1.pomGetter.SpeedCalc;
 
 import java.awt.*;
 import java.util.HashMap;
+import java.util.Map;
+
+import static pom.v1.pomGetter.PomIslandData.getIslands;
 
 public class PomConfig {
     public static ConfigClassHandler<PomConfig> HANDLER = ConfigClassHandler.createBuilder(PomConfig.class)
             .id(Identifier.withDefaultNamespace("ping-offset-miner"))
             .serializer(config -> GsonConfigSerializerBuilder.create(config)
                     .setPath(FabricLoader.getInstance().getConfigDir().resolve("pomConfig.json5"))
-                    .appendGsonBuilder(GsonBuilder::setPrettyPrinting)
+                    .appendGsonBuilder(builder -> {
+                        builder.setPrettyPrinting();
+                        builder.serializeNulls();
+                        return builder;
+                    })
                     .build())
             .build();
 
+    private static PomConfig INSTANCE;
+
 
     public static PomConfig Config() {
-        return HANDLER.instance();
+        if (INSTANCE == null) {
+            HANDLER.load();
+            INSTANCE = HANDLER.instance();
+        }
+        return INSTANCE;
+    }
+
+    public PomConfig() {
     }
 
     @SerialEntry
+    public Property<Boolean> active = new Property<>(true);
+
+    @SerialEntry
     public renderSettings line = renderSettings.lines();
+
     @SerialEntry
     public renderSettings highlight = renderSettings.highlight();
 
+    @SerialEntry
+    public Property<Boolean> shouldLog = new Property<>(false);
 
     @SerialEntry
-    public boolean active = true;
+    public Property<Boolean> sound = new Property<>(false);
 
     @SerialEntry
-    public boolean sound = false;
+    public Property<String> soundpath = new Property<>("");
 
     @SerialEntry
-    public String soundpath = "";
+    public Property<Boolean> debug = new Property<>(false);
 
     @SerialEntry
-    public boolean debug = false;
+    public Property<Double> speed = new Property<>(0.0);
 
     @SerialEntry
-    public double speed = 0.0;
+    public Property<Double> ping = new Property<>(0.0);
 
     @SerialEntry
-    public double ping = 0.0;
+    public Property<Double> tps = new Property<>(0.0);
 
     @SerialEntry
-    public boolean extra = true;
+    public Property<Boolean> extra = new Property<>(true);
 
     @SerialEntry
-    public double extraVal = 855;
+    public Property<Double> extraVal = new Property<>(855.0);
 
     @SerialEntry
-    public HashMap<String, Boolean> blockEnabled = new HashMap<>() {
-    };
+    public HashMap<String, Boolean> blockEnabled = PomBlocks.getBlocks();
 
     @SerialEntry
-    public HashMap<String, Boolean> islandEnabled = new HashMap<>();
+    public Map<String, Boolean> islandEnabled = PomIslandData.getIslands();
 
     @SerialEntry
-    public boolean ability = true;
+    public textSettings tickDisplay = textSettings.tickDisplay();
 
     @SerialEntry
-    public boolean logging = false;
+    public textSettings efficiencyDisplay = textSettings.efficiencyDisplay();
 
     @SerialEntry
-    public msbToggle msbToggleValue = msbToggle.OFF;
+    public Property<Integer> efficiencyDisplaySec = new Property<>(30);
+
+    @SerialEntry
+    public Property<Boolean> ability = new Property<>(false);
+
+    @SerialEntry
+    public Property<Boolean> debugGui = new Property<>(false);
+
+    @SerialEntry
+    public Property<msbToggle> msbToggleValue = new Property<>(msbToggle.OFF);
     @SerialEntry
     public enum msbToggle {
         OFF("Turn off"),
@@ -85,16 +122,48 @@ public class PomConfig {
             return name;
         }
     }
-
     @SerialEntry
-    public boolean shouldWarn = true;
+    public Property<Boolean> shouldWarn = new Property<>(true);
 
+    public void validate() {
+        PomBlocks.getBlocks().forEach((key, val) -> {
+            blockEnabled.putIfAbsent(key, val);
+        });
+        PomIslandData.getIslands().forEach((key, val) -> {
+            islandEnabled.putIfAbsent(key, val);
+        });
+
+    }
 
     public static void init() {
         HANDLER.load();
+        Config().validate();
+        INSTANCE = HANDLER.instance();
+        HANDLER.save();
     }
     public void save() {
         HANDLER.save();
+    }
+
+    public static class Property<T> {
+        @SerialEntry
+        public T value;
+
+        @SerialEntry
+        public T defaultValue;
+
+        public Property(T val) {
+            this.value = val;
+            this.defaultValue = val;
+        }
+
+        public T get() { return value; }
+
+        public T getDefault() {
+            return defaultValue == null ? value : defaultValue;
+        }
+
+        public void set(T value) { this.value = value; }
     }
 }
 

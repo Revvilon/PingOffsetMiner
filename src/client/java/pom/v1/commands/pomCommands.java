@@ -25,11 +25,6 @@ public class pomCommands {
                     );
                     return 1;
                 })
-                .then(literal("restart")
-                        .executes(ctx -> {
-                            Util.sendMsg(Component.literal("POM config restarted!"));
-                            return 1;
-                        }))
                 .then(literal("ping")
                         .executes(ctx -> {
                             Util.sendMsg(Component.literal("Your ping is: ")
@@ -44,7 +39,7 @@ public class pomCommands {
                         .executes(ctx -> {
                             Util.sendMsg(Component.literal("Your tps is: ")
                                     .withStyle(ChatFormatting.GRAY)
-                                    .append(Component.literal(String.valueOf((int) PingOffsetMinerClient.getTPS()))
+                                    .append(Component.literal(String.format("%.1f", PingOffsetMinerClient.getTPS()))
                                             .withStyle(ChatFormatting.AQUA, ChatFormatting.BOLD)
                                     )
                             );
@@ -54,7 +49,7 @@ public class pomCommands {
                         .executes(ctx -> {
                             Util.sendMsg(Component.literal("Disabled warning message")
                                     .withStyle(ChatFormatting.WHITE));
-                            PomConfig.Config().shouldWarn = false;
+                            PomConfig.Config().shouldWarn.set(false);
                             return 1;
                         })
                 )
@@ -62,7 +57,7 @@ public class pomCommands {
                         .executes(ctx -> {
                             Util.sendMsg(Component.literal("Enabled warning message")
                                     .withStyle(ChatFormatting.WHITE));
-                            PomConfig.Config().shouldWarn = true;
+                            PomConfig.Config().shouldWarn.set(true);
                             return 1;
                         }))
         );

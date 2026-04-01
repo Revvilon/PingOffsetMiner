@@ -55,7 +55,7 @@ public class PomStats {
         if (!stack.isEmpty()) {
             for (String entry : getToolTip(stack).reversed()) {
                 if (!entry.isEmpty()) {
-                    if (entry.contains(" DRILL ") || entry.contains(" GAUNTLET ") || entry.contains(" PICKAXE ")) {
+                    if (entry.contains("DRILL") || entry.contains("GAUNTLET") || entry.contains("PICKAXE")) {
                         return true;
                     }
                 }
@@ -65,7 +65,7 @@ public class PomStats {
     }
 
     private int getCooldown(ItemStack stack) {
-        if (!Config().ability) return -1;
+        if (!Config().ability.get()) return -1;
         Pattern pattern = Pattern.compile("\\s*([0-9.]+)\\s*s");
 
         boolean found = false;
@@ -117,7 +117,7 @@ public class PomStats {
         }
 
         public boolean isActive() {
-            return Config().debug || !this.item.isEmpty();
+            return Config().debug.get() || !this.item.isEmpty();
         }
 
         public void setBoost(boolean boost) {
@@ -148,7 +148,7 @@ public class PomStats {
 
     @EventHandler
     public void onChatMessage(onChatMessage event) {
-        if (Config().ability) {
+        if (Config().ability.get()) {
             String raw = event.message.replaceAll("$.", "");
             Matcher matcher = BOOST_PATTERN.matcher(raw);
             if (matcher.matches()) {
@@ -160,7 +160,7 @@ public class PomStats {
     int tickCount = 0;
     @EventHandler
     public void onTick(worldTickEvent event) {
-        if (Config().ability && TOOL_STATS.getBoost()) {
+        if (Config().ability.get() && TOOL_STATS.getBoost()) {
                 tickCount++;
 
                 for (String entry : Util.getTabList()) {

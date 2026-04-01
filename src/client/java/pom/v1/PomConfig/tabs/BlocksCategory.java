@@ -12,27 +12,22 @@ import java.util.Collection;
 
 import static pom.v1.PomConfig.PomConfig.Config;
 
-public class ScreenBlocks {
+public class BlocksCategory implements TabBuilder {
 
-    public ConfigCategory getCategory() {
-        return ConfigCategory.createBuilder()
-                .name(Component.literal("Blocks"))
+    private final String tabID = "Blocks";
 
-                .groups(blocks())
-
-                .build();
+    public ConfigCategory buildTab() {
+        ConfigCategory.Builder categoryBuilder = ConfigCategory.createBuilder().name(Component.literal(tabID));
+        addOptions(categoryBuilder);
+        return categoryBuilder.build();
     }
 
-    private Collection<OptionGroup> blocks() {
-
-        Collection<OptionGroup> groups = new ArrayList<>();
-
+    private void addOptions(ConfigCategory.Builder categoryBuilder) {
         var metCat = OptionGroup.createBuilder().name(Component.literal("Metals"));
         var gemCat = OptionGroup.createBuilder().name(Component.literal("Gemstones"));
         var oreCat = OptionGroup.createBuilder().name(Component.literal("Ores"));
 
-        SpeedCalc.blockHardness.forEach((key, value) -> {
-            Config().blockEnabled.putIfAbsent(key, true);
+        Config().blockEnabled.forEach((key, value) -> {
             OptionGroup.Builder let = null;
             if (key.contains("gem")) let = gemCat;
             if (key.contains("skyblock") && !key.contains("gem")) let = metCat;
@@ -49,10 +44,8 @@ public class ScreenBlocks {
                     .build());
         });
 
-        groups.add(metCat.build());
-        groups.add(gemCat.build());
-        groups.add(oreCat.build());
-
-        return groups;
+        categoryBuilder.group(metCat.build());
+        categoryBuilder.group(gemCat.build());
+        categoryBuilder.group(oreCat.build());
     }
 }

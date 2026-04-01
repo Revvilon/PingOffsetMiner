@@ -3,24 +3,19 @@ package pom.v1.render;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
-import com.mojang.blaze3d.platform.DepthTestFunction;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderContext;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MappableRingBuffer;
-import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.joml.Matrix4f;
-import org.joml.Matrix4fc;
-import org.joml.Vector3f;
-import org.joml.Vector4f;
+import org.joml.*;
 import org.lwjgl.system.MemoryUtil;
 import pom.v1.PomConfig.PomConfig;
 
@@ -29,6 +24,8 @@ import java.util.OptionalInt;
 
 import static pom.v1.PingOffsetMinerClient.MOD_ID;
 import static pom.v1.PomConfig.PomConfig.Config;
+import static pom.v1.render.PomPipelines.getHighlight;
+import static pom.v1.render.PomPipelines.getLine;
 
 
 public class PomRendering {
@@ -36,24 +33,6 @@ public class PomRendering {
     PomConfig Config = Config();
 
     private static final PomRendering instance = new PomRendering();
-
-        public static RenderPipeline FILLED_THROUGH_WALLS = RenderPipelines.register(
-                RenderPipeline.builder(RenderPipelines.DEBUG_FILLED_SNIPPET)
-                        .withLocation(Identifier.fromNamespaceAndPath(MOD_ID, "pipeline/debug_filled_through_walls"))
-                        .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-                        .withCull(false)
-                        .build()
-        );
-
-        // Custom pipeline lines
-        public static RenderPipeline LINES_RENDER = RenderPipelines.register(
-                RenderPipeline.builder(RenderPipelines.LINES_SNIPPET)
-                        .withLocation(Identifier.fromNamespaceAndPath(MOD_ID, "pipeline/debug_lines_render"))
-                        .withDepthTestFunction(DepthTestFunction.NO_DEPTH_TEST)
-                        .withCull(false)
-                        .build()
-        );
-
 
     private static final ByteBufferBuilder allocator = new ByteBufferBuilder(RenderType.SMALL_BUFFER_SIZE);
     private BufferBuilder buffer;
@@ -71,17 +50,20 @@ public class PomRendering {
 
     public void extractAndDraw(WorldRenderContext context, Minecraft client, BlockPos pos, VoxelShape shape, boolean timeoutExceeded) {
 
-            if (Config.highlight.active) {
-                renderWaypoint(context, shape, pos, !timeoutExceeded ? Config().highlight.c1 : Config().highlight.c2);
-                drawFilledThroughWalls(client, FILLED_THROUGH_WALLS);
+            RenderPipeline HIGHLIGHT_RENDER = getHighlight();
+            RenderPipeline LINES_RENDER = getLine();
+
+            if (Config.highlight.active.get()) {
+                renderWaypoint(context, shape, pos, !timeoutExceeded ? Config().highlight.c1.get() : Config().highlight.c2.get(), HIGHLIGHT_RENDER);
+                drawFilledThroughWalls(client, HIGHLIGHT_RENDER);
             }
-            if (Config.line.active) {
-                renderOutline(context, shape, pos, !timeoutExceeded ? Config().line.c1 : Config().line.c2, (float) Config().line.width);
+            if (Config.line.active.get()) {
+                renderOutline(context, shape, pos, !timeoutExceeded ? Config().line.c1.get() : Config().line.c2.get(), Config.line.width.get(), LINES_RENDER);
                 drawFilledThroughWalls(client, LINES_RENDER);
             }
     }
 
-    private void renderOutline(WorldRenderContext context, VoxelShape shape, BlockPos pos, Color color, float lineWidth) {
+    private void renderOutline(WorldRenderContext context, VoxelShape shape, BlockPos pos, Color color, double lineWidth, RenderPipeline renderPipeline) {
         PoseStack matrices = context.matrices();
         Vec3 camera = context.worldState().cameraRenderState.pos;
 
@@ -93,28 +75,24 @@ public class PomRendering {
         matrices.translate((float) x, (float) y, (float) z);
 
         if (buffer == null) {
-            buffer = new BufferBuilder(allocator, LINES_RENDER.getVertexFormatMode(), LINES_RENDER.getVertexFormat());
+            buffer = new BufferBuilder(allocator, renderPipeline.getVertexFormatMode(), renderPipeline.getVertexFormat());
         }
 
         Matrix4f matrix = matrices.last().pose();
 
         shape.forAllEdges((minX, minY, minZ, maxX, maxY, maxZ) -> {
-            Vector3f dir = new Vector3f((float) (maxX - minX), (float) (maxY - minY), (float) (maxZ - minZ))
-                    .normalize();
-            buffer.addVertex(matrix, (float) minX, (float) minY, (float) minZ)
-                    .setColor((float) color.getRed() / 255,  (float) color.getGreen() / 255, (float) color.getBlue() / 255, (float) color.getAlpha() / 255)
-                    .setNormal(dir.x, dir.y, dir.z)
-                    .setLineWidth(lineWidth);
-            buffer.addVertex(matrix, (float) maxX, (float)  maxY, (float) maxZ)
-                    .setColor((float) color.getRed() / 255,  (float) color.getGreen() / 255, (float) color.getBlue() / 255, (float) color.getAlpha() / 255)
-                    .setNormal(dir.x, dir.y, dir.z)
-                    .setLineWidth(lineWidth);
+
+            Vector3f start = new Vector3f((float)minX, (float)minY, (float)minZ);
+            Vector3f end = new Vector3f((float)maxX, (float)maxY, (float)maxZ);
+
+            renderLine(buffer, matrix, start,  end, color, (float) (lineWidth / 100));
+
         });
 
         matrices.popPose();
     }
 
-    private void renderWaypoint(WorldRenderContext context, VoxelShape shape, BlockPos pos, Color color) {
+    private void renderWaypoint(WorldRenderContext context, VoxelShape shape, BlockPos pos, Color color, RenderPipeline renderPipeline) {
         PoseStack matrices = context.matrices();
         Vec3 camera = context.worldState().cameraRenderState.pos;
 
@@ -127,7 +105,7 @@ public class PomRendering {
         matrices.translate(x, y, z);
 
         if (buffer == null) {
-            buffer = new BufferBuilder(allocator, FILLED_THROUGH_WALLS.getVertexFormatMode(), FILLED_THROUGH_WALLS.getVertexFormat());
+            buffer = new BufferBuilder(allocator, renderPipeline.getVertexFormatMode(), renderPipeline.getVertexFormat());
         }
 
         shape.forAllBoxes((minX, minY, minZ, maxX, maxY, maxZ) -> renderFilledBox(
@@ -141,6 +119,7 @@ public class PomRendering {
     }
 
     private void drawFilledThroughWalls(Minecraft client, @SuppressWarnings("SameParameterValue") RenderPipeline pipeline) {
+
         MeshData builtBuffer = buffer.buildOrThrow();
         MeshData.DrawState drawParameters = builtBuffer.drawState();
         VertexFormat format = drawParameters.format();
@@ -180,6 +159,7 @@ public class PomRendering {
         if (pipeline.getVertexFormatMode() == VertexFormat.Mode.QUADS) {
             builtBuffer.sortQuads(allocator, RenderSystem.getProjectionType().vertexSorting());
 
+
             indices = pipeline.getVertexFormat().uploadImmediateIndexBuffer(builtBuffer.indexBuffer());
             indexType = builtBuffer.drawState().indexType();
         } else {
@@ -190,13 +170,23 @@ public class PomRendering {
 
         GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms()
                 .writeTransform(RenderSystem.getModelViewMatrix(), COLOR_MODULATOR, MODEL_OFFSET, TEXTURE_MATRIX);
+
+        var depthView = client.getMainRenderTarget().getDepthTextureView();
+
         try (RenderPass renderPass = RenderSystem.getDevice()
                 .createCommandEncoder()
-                .createRenderPass(() -> MOD_ID + "pom pipeline renderer", client.getMainRenderTarget().getColorTextureView(), OptionalInt.empty())) {
+                .createRenderPass(
+                        () -> MOD_ID + "pom pipeline renderer",
+                        client.getMainRenderTarget().getColorTextureView(),
+                        OptionalInt.empty(),
+                        depthView,
+                        java.util.OptionalDouble.empty()
+                )) {
             renderPass.setPipeline(pipeline);
 
             RenderSystem.bindDefaultUniforms(renderPass);
             renderPass.setUniform("DynamicTransforms", dynamicTransforms);
+
 
             renderPass.setVertexBuffer(0, vertices);
             renderPass.setIndexBuffer(indices, indexType);
@@ -204,6 +194,7 @@ public class PomRendering {
             renderPass.drawIndexed(0 / format.getVertexSize(), 0, drawParameters.indexCount(), 1);
         }
         builtBuffer.close();
+
     }
 
     public void close() {
@@ -215,6 +206,38 @@ public class PomRendering {
         }
     }
 
+
+    private void renderLine(VertexConsumer buffer, Matrix4f matrix, Vector3f start, Vector3f end, Color color, float width) {
+        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+
+        Vector3f lineDir = new Vector3f(end).sub(start).normalize();
+
+        Vector3f toCamera = new Vector3f(0, 0, 1).rotate(camera.rotation());
+
+        Vector3f side = new Vector3f(lineDir).cross(toCamera);
+
+        if (side.lengthSquared() < 0.001f) {
+            Vector3f cameraUp = new Vector3f(0, 1, 0).rotate(camera.rotation());
+            side = new Vector3f(lineDir).cross(cameraUp);
+        }
+
+        side.normalize().mul(width / 2f);
+
+        float r = color.getRed() / 255f;
+        float g = color.getGreen() / 255f;
+        float b = color.getBlue() / 255f;
+        float a = color.getAlpha() / 255f;
+
+        buffer.addVertex(matrix, start.x() + side.x(), start.y() + side.y(), start.z() + side.z()).setColor(r, g, b, a);
+        buffer.addVertex(matrix, start.x() - side.x(), start.y() - side.y(), start.z() - side.z()).setColor(r, g, b, a);
+        buffer.addVertex(matrix, end.x() - side.x(), end.y() - side.y(), end.z() - side.z()).setColor(r, g, b, a);
+        buffer.addVertex(matrix, end.x() + side.x(), end.y() + side.y(), end.z() + side.z()).setColor(r, g, b, a);
+
+        buffer.addVertex(matrix, end.x() + side.x(), end.y() + side.y(), end.z() + side.z()).setColor(r, g, b, a);
+        buffer.addVertex(matrix, end.x() - side.x(), end.y() - side.y(), end.z() - side.z()).setColor(r, g, b, a);
+        buffer.addVertex(matrix, start.x() - side.x(), start.y() - side.y(), start.z() - side.z()).setColor(r, g, b, a);
+        buffer.addVertex(matrix, start.x() + side.x(), start.y() + side.y(), start.z() + side.z()).setColor(r, g, b, a);
+    }
     private void renderFilledBox(Matrix4fc positionMatrix, BufferBuilder buffer, float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float red, float green, float blue, float alpha) {
         // Front Face
         buffer.addVertex(positionMatrix, minX, minY, maxZ).setColor(red, green, blue, alpha);

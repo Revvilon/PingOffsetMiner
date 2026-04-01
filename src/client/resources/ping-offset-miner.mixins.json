@@ -3,6 +3,7 @@
   "package": "pom.v1.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ConnectionMixin",
     "InventoryMixin"
   ],
   "injectors": {

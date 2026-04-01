@@ -6,17 +6,24 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.*;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import pom.v1.PomConfig.PomConfig;
 import pom.v1.commands.pomCommands;
+import pom.v1.events.blockHitEvent;
+import pom.v1.gui.PomScreen;
 import pom.v1.pomGetter.PomBlockData;
 import pom.v1.pomGetter.PomStats;
 import pom.v1.pomGetter.SpeedCalc;
@@ -39,6 +46,8 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 	public static PomTPS POM_TPS = new PomTPS();
 	public static PomBlockData POM_BLOCK_DATA = new PomBlockData();
 	public static PomBlockData.PomBlock POM_BLOCK = new PomBlockData.PomBlock();
+	public static PomCalc POM_CALC = new PomCalc();
+	public static PomEfficiency POM_EFF = new PomEfficiency();
 
 	// Initialize variables
 	BlockPos currentBlock;
@@ -49,8 +58,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
-		pom.v1.PomConfig.PomConfig.init();
-
+        PomConfig.init();
 
 		EVENT_BUS.registerLambdaFactory("pom.v1", (lookupInMethod, klass) -> {
 			try {
@@ -66,18 +74,26 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 		EVENT_BUS.subscribe(POM_PING);
 		EVENT_BUS.subscribe(POM_TPS);
 		EVENT_BUS.subscribe(POM_BLOCK_DATA);
+		EVENT_BUS.subscribe(PomScreen.class);
+		EVENT_BUS.subscribe(POM_CALC);
+		EVENT_BUS.subscribe(POM_EFF);
 		PomRendering POM_RENDER = new PomRendering();
 
 
+		HudElementRegistry.attachElementAfter(
+				VanillaHudElements.CROSSHAIR,
+				Identifier.fromNamespaceAndPath(MOD_ID, "text_test"),
+				PomScreen::render
+		);
 
-		WorldRenderEvents.BEFORE_TRANSLUCENT.register(event -> {
+		WorldRenderEvents.END_MAIN.register(event -> {
 			Minecraft client = Minecraft.getInstance();
 			long time = System.currentTimeMillis();
 
 			POM_BLOCK.setBlock(client);
 
 			if (
-					!Config().active ||
+					!Config().active.get() ||
 					!Util.getIsland() ||
 					POM_BLOCK.isEmpty() ||
 					client.player == null ||
@@ -85,15 +101,14 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 					!TOOL_STATS.isActive()
 			)
 			{
-				log("Config is: " + Config().active, time);
+				log("Config is: " + Config().active.get(), time);
 				log("Block: " + POM_BLOCK.getName(), time);
 				log("Tool is: " + TOOL_STATS.isActive(), time);
 				log("Island is: " + Util.getIsland(), time);
-				log("Debug is: " + Config().debug, time);
+				log("Debug is: " + Config().debug.get(), time);
 				timeoutExceeded = false;
-				ticksNeeded = -1;
-				startServerTick = -1;
 				currentBlock = null;
+				POM_CALC.reset();
 				return;
 			}
 
@@ -103,63 +118,44 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 			if (!Objects.equals(currentBlock, blockPos) || !client.options.keyAttack.isDown()) {
 				sound = false;
 				currentBlock = blockPos;
-				startServerTick = client.player.tickCount;
+				POM_CALC.reset();
 				log("Reset block breaking", time);
 			}
 
-				double debugSpeed = Config().debug ? Config().speed : TOOL_STATS.getSpeed();
-				double extra = Config().extra ? Config().extraVal : 0;
 
-				if (POM_BLOCK.getName().contains("gem")) {
-					debugSpeed = debugSpeed + extra;
-				}
-
-				ticksNeeded = SpeedCalc.getTicksToBreak((int) POM_BLOCK.getHardness(), debugSpeed);
-
-
-				if (sound && timeoutExceeded && Config().sound && client.options.keyAttack.isDown()) {
+				if (sound && timeoutExceeded && Config().sound.get() && client.options.keyAttack.isDown()) {
 					sound = false;
-					SoundEvent useSound = SoundEvent.createVariableRangeEvent(Identifier.parse(String.valueOf(Config().soundpath)));
+					SoundEvent useSound = SoundEvent.createVariableRangeEvent(Identifier.parse(String.valueOf(Config().soundpath.get())));
 					client.player.playSound(useSound);
 				}
-				if (!sound && !timeoutExceeded) sound = true;
+				if (!sound && !POM_CALC.timeoutExceeded()) sound = true;
 
 				if (shouldRender()) {
+
 					POM_RENDER.extractAndDraw(
 							event,
 							client,
 							blockPos,
 							blockShape,
-							timeoutExceeded
+							POM_CALC.timeoutExceeded()
 					);
 				}
 
-				Util.log("Mining speed: " + debugSpeed, time);
-				Util.log("Ticks needed: " + ticksNeeded, time);
+				Util.log("Mining speed: " + POM_CALC.getSpeed(), time);
+				Util.log("Ticks needed: " + POM_CALC.getTicksNeeded(), time);
 				Util.log("Should render: " + shouldRender(), time);
 		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(event -> {
-			if (event.player == null || POM_BLOCK.isEmpty()) return;
-			int ticksElapsed = event.player.tickCount - startServerTick;
 
-			double debugTps = Config().debug ? 20.0 : getTPS();
-			double pingSec = Config().debug ? Config().ping / 1000.0 : getPing() / 1000.0;
-
-			double pingMath = debugTps * pingSec;
-
-			double pingOffset = ticksNeeded - pingMath > pingMath
-					? ticksNeeded - pingMath
-					: ticksNeeded;
-			timeoutExceeded = ticksNeeded > 0 && ticksElapsed >= pingOffset && event.options.keyAttack.isDown();
 		});
 
 		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, outline) -> {
-			if (!POM_BLOCK.isEmpty() || !getIsland()) {
+			if (!POM_BLOCK.isEmpty() && getIsland()) {
 
-				if (Config().debug && Config().line.active) return false;
+				if (Config().debug.get() && Config().line.active.get()) return false;
 
-				if (Config().active && Config().line.active) return !shouldRender();
+				if (Config().active.get() && Config().line.active.get()) return !shouldRender();
 
 			}
 			return true;
@@ -174,7 +170,11 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 
 		AttackBlockCallback.EVENT.register((player, level, hand, blockpos, hr) -> {
 
-			if (!Util.foundSpeed() && !Config().debug && Config().active && Util.getIsland() && Config().shouldWarn) {
+
+			blockHitEvent event = new blockHitEvent(blockpos, POM_BLOCK.getName());
+			EVENT_BUS.post(event);
+
+			if (!Util.foundSpeed() && !Config().debug.get() && Config().active.get() && Util.getIsland() && Config().shouldWarn.get()) {
 				Util.sendMsg(Component.literal("Mining Speed not found! Please enable in tab widget").withStyle(ChatFormatting.RED));
 				Util.sendMsg(Component.literal("To enable: /tab -> Stats Widget -> Shown Stats -> Mining Speed").withStyle(ChatFormatting.RED));
 				Util.sendMsg(Component.literal("Make sure that the mining speed stat is visible in your tab menu").withStyle(ChatFormatting.RED));
@@ -190,9 +190,11 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 	}
 
 	public static double getTPS() {
+		if (Config().debug.get()) {return Config().tps.get();}
 		return POM_TPS.getAverageLatency();
 	}
-	public static long getPing() {
+	public static double getPing() {
+		if (Config().debug.get()) {return Config().ping.get();}
         return POM_PING.getAverageLatency();
 	}
 }

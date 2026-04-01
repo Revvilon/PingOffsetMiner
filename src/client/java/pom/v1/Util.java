@@ -34,7 +34,7 @@ public class Util {
     }
 
     public static Boolean getIsland() {
-        if (PomConfig.Config().debug) return true;
+        if (PomConfig.Config().debug.get()) return true;
 
         if (Config().islandEnabled.getOrDefault(getArea(), false)) return true;
 
@@ -44,7 +44,7 @@ public class Util {
     public static String getArea() {
         for (String entry : Util.getTabList()) {
             String line = entry.replaceFirst("^Area: ", "");
-            if (PomConfig.Config().islandEnabled.containsKey(line)) {
+            if (Config().islandEnabled.containsKey(line)) {
 
                 return line;
             }
@@ -111,8 +111,8 @@ public class Util {
     }
 
     public static boolean shouldRender() {
-        if (Config().ability) {
-            switch (Config().msbToggleValue) {
+        if (Config().ability.get()) {
+            switch (Config().msbToggleValue.get()) {
                 case OFF -> {
                     return !TOOL_STATS.getBoost();
                 }
@@ -126,7 +126,7 @@ public class Util {
 
     static HashMap<String, Long> logs = new HashMap<String, Long>();
     public static void log(String text, Long time) {
-        if (Config().logging) return;
+        if (!Config().shouldLog.get()) return;
         logs.putIfAbsent(text, 10001L);
         if ((System.currentTimeMillis() - logs.get(text)) <= 2000) return;
         Util.sendMsg(Component.literal(text).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));

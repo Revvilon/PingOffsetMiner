@@ -1,29 +1,29 @@
 package pom.v1.pomGetter;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class PomIslandData {
-    private static final HashMap<String, Boolean> islands = new  HashMap<>() {{
-        put("Private Island", false);
-        put("Garden", false);
-        put("Hub", false);
-        put("The Barn", false);
-        put("Mushroom Desert", false);
-        put("The Park", false);
-        put("Spider's Den", false);
-        put("The End", false);
-        put("Crimson Isle", false);
-        put("Gold Mine", true);
-        put("Dwarven Mines", true);
-        put("Crystal Hollows", true);
-        put("Jerry's Workshop", false);
-        put("Dungeon Hub", false);
-        put("Rift Dimension", false);
-        put("Backwater Bayou", false);
-        put("Mineshaft", true);
-    }};
-
-    public static HashMap<String, Boolean> getIslands() {
-        return islands;
+    public static Map<String, Boolean> getIslands() {
+       Map<String, Boolean> islands = new HashMap<>();
+       islands.put("Private Island", false);
+       islands.put("Garden", false);
+       islands.put("Hub", false);
+       islands.put("The Barn", false);
+       islands.put("Mushroom Desert", false);
+       islands.put("The Park", false);
+       islands.put("Crystal Hollows", true);
+       islands.put("Spider's Den", false);
+       islands.put("The End", false);
+       islands.put("Crimson Isle", false);
+       islands.put("Gold Mine", true);
+       islands.put("Dwarven Mines", true);
+       islands.put("Jerry's Workshop", false);
+       islands.put("Dungeon Hub", false);
+       islands.put("Rift Dimension", false);
+       islands.put("Backwater Bayou", false);
+       islands.put("Mineshaft", true);
+       islands.put("Deep Caverns", true);
+         return islands;
     }
 }

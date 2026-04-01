@@ -69,11 +69,6 @@ public class EventMixins {
             }
         }
 
-    @Inject(method = "tick", at = @At("TAIL"))
-        private void onTick(CallbackInfo ci) {
-            worldTickEvent event = new worldTickEvent();
-            PingOffsetMinerClient.EVENT_BUS.post(event);
-        }
 
     @Inject(method = "handleSetPlayerInventory", at = @At("TAIL"))
         private void onLoad(CallbackInfo ci) {
