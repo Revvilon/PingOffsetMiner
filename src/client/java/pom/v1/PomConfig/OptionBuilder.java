@@ -3,21 +3,12 @@ package pom.v1.PomConfig;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionEventListener;
 import dev.isxander.yacl3.api.OptionGroup;
-import dev.isxander.yacl3.api.controller.*;
+import dev.isxander.yacl3.api.controller.ControllerBuilder;
 import net.minecraft.network.chat.Component;
 
-import java.awt.*;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.SequencedCollection;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
-
-import static pom.v1.PomConfig.PomConfig.Config;
 
 public class OptionBuilder {
 
@@ -76,9 +67,7 @@ public class OptionBuilder {
     @SuppressWarnings("Deprecated")
     private static void link(Option<Boolean> master, ArrayList<Option<?>> options) {
 
-        options.forEach(option -> {
-            option.setAvailable(master.pendingValue());
-        });
+        options.forEach(option -> option.setAvailable(master.pendingValue()));
 
         master.addEventListener((opt, event) -> {
             for (Option<?> child: options) {

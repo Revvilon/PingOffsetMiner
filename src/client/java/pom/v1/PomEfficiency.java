@@ -1,22 +1,10 @@
 package pom.v1;
 
-import com.google.common.collect.HashBasedTable;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.network.chat.Component;
-import net.minecraft.network.protocol.game.ClientboundBlockChangedAckPacket;
-import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
-import net.minecraft.network.protocol.game.ClientboundBlockEventPacket;
-import net.minecraft.network.protocol.game.ClientboundBlockUpdatePacket;
-import net.minecraft.world.level.block.Blocks;
-import pom.v1.events.gameJoinedEvent;
-import pom.v1.events.packetReceivedEvent;
 import pom.v1.events.worldTickEvent;
-import pom.v1.pomGetter.PomBlocks;
 import pom.v1.pomGetter.SpeedCalc;
 
 import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static pom.v1.PingOffsetMinerClient.*;
 import static pom.v1.PomConfig.PomConfig.Config;
@@ -25,7 +13,6 @@ public class PomEfficiency {
 
     private final HashMap<String, Integer> maxBlocksMined = new HashMap<>();
     private long lastMined;
-    public int lastMinedMax = Config().efficiencyDisplaySec.get();
     public int breakTick;
     public float efficiency;
     public long upTime;
@@ -66,7 +53,7 @@ public class PomEfficiency {
     public boolean isMining() {
         long currentTime = System.currentTimeMillis();
 
-        return currentTime < (this.lastMined + lastMinedMax* 1000L);
+        return currentTime < (this.lastMined + Config().efficiencyDisplaySec.get() * 1000L);
     }
 
     public double getUpTime() {
@@ -84,9 +71,7 @@ public class PomEfficiency {
         this.breakTick = 0;
         this.efficiency = 0f;
         POM_BLOCK.resetBlocksMined();
-        SpeedCalc.blockHardness.forEach((key, value) -> {
-            this.maxBlocksMined.put(key, 0);
-        });
+        SpeedCalc.blockHardness.forEach((key, value) -> this.maxBlocksMined.put(key, 0));
         upTime = 0;
     }
 

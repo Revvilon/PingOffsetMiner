@@ -10,12 +10,11 @@ import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
-import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.*;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.InteractionResult;
@@ -26,7 +25,6 @@ import pom.v1.events.blockHitEvent;
 import pom.v1.gui.PomScreen;
 import pom.v1.pomGetter.PomBlockData;
 import pom.v1.pomGetter.PomStats;
-import pom.v1.pomGetter.SpeedCalc;
 import pom.v1.pomNetwork.PomPing;
 import pom.v1.pomNetwork.PomTPS;
 import pom.v1.render.PomRendering;
@@ -51,9 +49,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 
 	// Initialize variables
 	BlockPos currentBlock;
-	double ticksNeeded = -1;
 	boolean timeoutExceeded = false;
-	int startServerTick;
 	boolean sound = false;
 
 	@Override
@@ -122,13 +118,13 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 				log("Reset block breaking", time);
 			}
 
-
-				if (sound && timeoutExceeded && Config().sound.get() && client.options.keyAttack.isDown()) {
-					sound = false;
-					SoundEvent useSound = SoundEvent.createVariableRangeEvent(Identifier.parse(String.valueOf(Config().soundpath.get())));
-					client.player.playSound(useSound);
-				}
-				if (!sound && !POM_CALC.timeoutExceeded()) sound = true;
+			if (!sound && !POM_CALC.timeoutExceeded()) sound = true;
+			if (sound && POM_CALC.timeoutExceeded() && Config().sound.get() && client.options.keyAttack.isDown()) {
+				sound = false;
+				Minecraft.getInstance().getSoundManager().play(
+						SimpleSoundInstance.forUI(SoundEvent.createVariableRangeEvent(Identifier.withDefaultNamespace(Config().soundpath.get())), 1.0f)
+				);
+			}
 
 				if (shouldRender()) {
 

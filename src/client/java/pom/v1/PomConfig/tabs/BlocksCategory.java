@@ -5,10 +5,6 @@ import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionGroup;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import net.minecraft.network.chat.Component;
-import pom.v1.pomGetter.SpeedCalc;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 import static pom.v1.PomConfig.PomConfig.Config;
 

@@ -3,7 +3,6 @@ package pom.v1.PomConfig.dataHolder;
 import pom.v1.PomConfig.PomConfig;
 
 import java.awt.*;
-import java.util.Properties;
 
 public class renderSettings {
     public PomConfig.Property<Boolean> active;

@@ -3,22 +3,17 @@ package pom.v1.PomConfig.tabs;
 import dev.isxander.yacl3.api.*;
 import dev.isxander.yacl3.api.controller.*;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.layouts.SpacerElement;
-import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Util;
-import pom.v1.PomConfig.OptionBuilder;
 import pom.v1.PomConfig.PomConfig;
 import pom.v1.PomConfig.dataHolder.renderSettings;
 
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static pom.v1.PingOffsetMinerClient.MOD_ID;
-import static pom.v1.PomConfig.OptionBuilder.*;
+import static pom.v1.PomConfig.OptionBuilder.build;
+import static pom.v1.PomConfig.OptionBuilder.buildLinked;
 import static pom.v1.PomConfig.PomConfig.Config;
 
 public class MainCategory implements TabBuilder {

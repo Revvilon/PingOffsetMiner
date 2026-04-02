@@ -1,7 +1,5 @@
 package pom.v1.PomConfig;
 
-import com.google.gson.GsonBuilder;
-import com.mojang.blaze3d.platform.DepthTestFunction;
 import dev.isxander.yacl3.config.v2.api.ConfigClassHandler;
 import dev.isxander.yacl3.config.v2.api.SerialEntry;
 import dev.isxander.yacl3.config.v2.api.serializer.GsonConfigSerializerBuilder;
@@ -9,16 +7,11 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resources.Identifier;
 import pom.v1.PomConfig.dataHolder.renderSettings;
 import pom.v1.PomConfig.dataHolder.textSettings;
-import pom.v1.pomGetter.PomBlockData;
 import pom.v1.pomGetter.PomBlocks;
 import pom.v1.pomGetter.PomIslandData;
-import pom.v1.pomGetter.SpeedCalc;
 
-import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
-
-import static pom.v1.pomGetter.PomIslandData.getIslands;
 
 public class PomConfig {
     public static ConfigClassHandler<PomConfig> HANDLER = ConfigClassHandler.createBuilder(PomConfig.class)
@@ -126,12 +119,8 @@ public class PomConfig {
     public Property<Boolean> shouldWarn = new Property<>(true);
 
     public void validate() {
-        PomBlocks.getBlocks().forEach((key, val) -> {
-            blockEnabled.putIfAbsent(key, val);
-        });
-        PomIslandData.getIslands().forEach((key, val) -> {
-            islandEnabled.putIfAbsent(key, val);
-        });
+        PomBlocks.getBlocks().forEach((key, val) -> blockEnabled.putIfAbsent(key, val));
+        PomIslandData.getIslands().forEach((key, val) -> islandEnabled.putIfAbsent(key, val));
 
     }
 

@@ -18,7 +18,8 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static pom.v1.PingOffsetMinerClient.*;
+import static pom.v1.PingOffsetMinerClient.TOOL_STATS;
+import static pom.v1.PingOffsetMinerClient.getTPS;
 import static pom.v1.PomConfig.PomConfig.Config;
 
 public class PomStats {

@@ -3,10 +3,8 @@ package pom.v1.PomConfig.tabs;
 import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.OptionGroup;
 import dev.isxander.yacl3.api.controller.DoubleSliderControllerBuilder;
-import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import net.minecraft.network.chat.Component;
-import pom.v1.PomConfig.OptionBuilder;
 
 import static pom.v1.PomConfig.OptionBuilder.build;
 import static pom.v1.PomConfig.OptionBuilder.buildLinked;

@@ -11,7 +11,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import pom.v1.Util;
-import pom.v1.events.blockBrokenEvent;
 import pom.v1.events.blockHitEvent;
 import pom.v1.events.gameJoinedEvent;
 import pom.v1.events.packetReceivedEvent;
@@ -48,9 +47,7 @@ public class PomBlockData {
         public HashMap<String, Integer> getMinedBlocks() {return this.minedBlocks;}
 
         public void resetBlocksMined() {
-            SpeedCalc.blockHardness.forEach((key, val) -> {
-                this.minedBlocks.put(key, 0);
-            });
+            SpeedCalc.blockHardness.forEach((key, val) -> this.minedBlocks.put(key, 0));
         }
 
         public int getTotalMined(HashMap<String, Integer> map) {
@@ -120,7 +117,7 @@ public class PomBlockData {
     public void onBlockMined(packetReceivedEvent event) {
         if (event.value instanceof ClientboundBlockUpdatePacket packet) {
 
-            if (!packet.getBlockState().isAir()) return;
+            if (!packet.getBlockState().isAir() && !packet.getBlockState().is(Blocks.BEDROCK)) return;
 
             var hitBlocks = POM_BLOCK.getHitBlocks();
             var minedBlocks = POM_BLOCK.getMinedBlocks();

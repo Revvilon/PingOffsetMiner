@@ -4,8 +4,6 @@ import dev.isxander.yacl3.api.ConfigCategory;
 import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
 import net.minecraft.network.chat.Component;
-import pom.v1.PomConfig.OptionBuilder;
-import pom.v1.pomGetter.PomIslandData;
 
 import static pom.v1.PomConfig.PomConfig.Config;
 

@@ -2,9 +2,6 @@ package pom.v1;
 
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.client.Minecraft;
-import net.minecraft.network.chat.Component;
-import pom.v1.events.gameJoinedEvent;
-import pom.v1.events.packetReceivedEvent;
 import pom.v1.events.worldTickEvent;
 import pom.v1.pomGetter.SpeedCalc;
 
@@ -43,7 +40,7 @@ public class PomCalc {
                 ? ticksNeeded - pingMath
                 : ticksNeeded;
 
-        return (int) pingOffset;
+        return (int) Math.max(4, pingOffset);
     }
     public int getTicksElapsed() { return this.ticksElapsed; }
 

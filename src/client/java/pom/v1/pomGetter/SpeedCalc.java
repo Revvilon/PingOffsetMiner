@@ -118,6 +118,8 @@ public class SpeedCalc {
     public static double getTicksToBreak(int blockHardness, double miningSpeed) {
         if (blockHardness == -1 || miningSpeed == -1)
             return -1;
-        return Math.round(blockHardness * 30 / miningSpeed);
+        long ticks = Math.round(blockHardness * 30 / miningSpeed);
+
+        return Math.max(4, ticks);
     }
 }

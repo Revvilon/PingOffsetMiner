@@ -1,17 +1,14 @@
 package pom.v1.PomConfig.tabs;
 
-import dev.isxander.yacl3.api.ButtonOption;
 import dev.isxander.yacl3.api.ConfigCategory;
+import dev.isxander.yacl3.api.LabelOption;
+import dev.isxander.yacl3.api.Option;
 import dev.isxander.yacl3.api.OptionGroup;
 import dev.isxander.yacl3.api.controller.ColorControllerBuilder;
-import dev.isxander.yacl3.api.controller.FloatSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.IntegerSliderControllerBuilder;
 import dev.isxander.yacl3.api.controller.TickBoxControllerBuilder;
-import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import pom.v1.Util;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,13 +36,20 @@ public class GuiCategory implements TabBuilder {
                // .option(build("Scale", Config().tickDisplay.size, opt -> FloatSliderControllerBuilder.create(opt).step(.1F).range(0F, 3F)).build())
                 .build())
                 ).build();
-        categoryBuilder.group(buildLinked(OptionGroup.createBuilder()
-                .option(build("Efficiency display enabled", Config().efficiencyDisplay.active, TickBoxControllerBuilder::create).build())
-                .option(build("Timeout value", Config().efficiencyDisplaySec, opt -> IntegerSliderControllerBuilder.create(opt).range(1, 100).step(1)).build())
-                .option(build("Horizontal position", Config().efficiencyDisplay.x, opt -> IntegerSliderControllerBuilder.create(opt).step(1).range(0, 100)).build())
-                .option(build("Vertical position", Config().efficiencyDisplay.y, opt -> IntegerSliderControllerBuilder.create(opt).step(1).range(0, 100)).build())
-               // .option(build("Scale", Config().efficiencyDisplay.size, opt -> FloatSliderControllerBuilder.create(opt).step(.1F).range(0F, 3F)).build())
-        .build()));
-        categoryBuilder.option(build("Extra information in gui (for debugging", Config().debugGui, TickBoxControllerBuilder::create).build());
+
+        var group = new ArrayList<Option<?>>(List.of(
+                        build("Efficiency display enabled", Config().efficiencyDisplay.active, TickBoxControllerBuilder::create).build(),
+                        build("Timeout value", Config().efficiencyDisplaySec, opt -> IntegerSliderControllerBuilder.create(opt).range(1, 100).step(1)).build(),
+                        build("Horizontal position", Config().efficiencyDisplay.x, opt -> IntegerSliderControllerBuilder.create(opt).step(1).range(0, 100)).build(),
+                        build("Vertical position", Config().efficiencyDisplay.y, opt -> IntegerSliderControllerBuilder.create(opt).step(1).range(0, 100)).build()
+                ));
+        buildLinked(group);
+
+        group.add(LabelOption.create(Component.literal("")));
+        group.add(build("Extra information - DEBUG ONLY", Config().debugGui, TickBoxControllerBuilder::create).build());
+
+        categoryBuilder.group(OptionGroup.createBuilder()
+                        .options(group)
+                .build());
     }
 }

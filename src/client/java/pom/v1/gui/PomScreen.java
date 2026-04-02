@@ -1,49 +1,20 @@
 package pom.v1.gui;
 
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import meteordevelopment.orbit.EventHandler;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.impl.client.rendering.hud.HudLayer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.MultiLineLabel;
-import net.minecraft.client.gui.components.MultilineTextField;
-import net.minecraft.client.gui.render.GuiRenderer;
-import net.minecraft.client.gui.render.state.GuiRenderState;
-import net.minecraft.client.gui.render.state.GuiTextRenderState;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.ComponentContents;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.server.dialog.input.TextInput;
-import net.minecraft.util.ARGB;
-import net.minecraft.util.FormattedCharSequence;
-import net.minecraft.util.Mth;
-import org.apache.logging.log4j.core.pattern.TextRenderer;
-import org.joml.Matrix3dStack;
-import org.joml.Matrix3x2fStack;
-import pom.v1.PingOffsetMinerClient;
 import pom.v1.Util;
-import pom.v1.events.ticksNeededEvent;
-import pom.v1.pomGetter.PomStats;
 
-import java.awt.*;
-import java.awt.font.FontRenderContext;
-import java.awt.image.renderable.RenderContext;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 
 import static pom.v1.PingOffsetMinerClient.*;
 import static pom.v1.PomConfig.PomConfig.Config;
-import static pom.v1.Util.shouldRender;
 
 public class PomScreen {
 

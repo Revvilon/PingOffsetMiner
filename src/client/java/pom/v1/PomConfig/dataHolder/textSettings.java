@@ -1,6 +1,5 @@
 package pom.v1.PomConfig.dataHolder;
 
-import net.minecraft.client.Minecraft;
 import pom.v1.PomConfig.PomConfig;
 
 import java.awt.*;
