@@ -92,6 +92,9 @@ public class PomConfig {
     public Property<Integer> efficiencyDisplaySec = new Property<>(30);
 
     @SerialEntry
+    public textSettings performanceDisplay = textSettings.performanceDisplay();
+
+    @SerialEntry
     public Property<Boolean> ability = new Property<>(false);
 
     @SerialEntry
@@ -138,19 +141,11 @@ public class PomConfig {
         @SerialEntry
         public T value;
 
-        @SerialEntry
-        public T defaultValue;
-
         public Property(T val) {
             this.value = val;
-            this.defaultValue = val;
         }
 
         public T get() { return value; }
-
-        public T getDefault() {
-            return defaultValue == null ? value : defaultValue;
-        }
 
         public void set(T value) { this.value = value; }
     }

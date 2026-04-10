@@ -9,6 +9,7 @@ import net.minecraft.util.Util;
 import pom.v1.PomConfig.PomConfig;
 import pom.v1.PomConfig.dataHolder.renderSettings;
 
+import java.awt.*;
 import java.util.List;
 
 import static pom.v1.PingOffsetMinerClient.MOD_ID;
@@ -28,15 +29,15 @@ public class MainCategory implements TabBuilder {
 
     private void addOptions(ConfigCategory.Builder categoryBuilder) {
 
-        categoryBuilder.option(build("Enabled", Config().active, TickBoxControllerBuilder::create).build());
+        categoryBuilder.option(build("Enabled", true, Config().active, TickBoxControllerBuilder::create).build());
 
         categoryBuilder.group(groupBuilder("Line", Config().line));
         categoryBuilder.group(groupBuilder("Highlight", Config().highlight));
 
         categoryBuilder.group(OptionGroup.createBuilder().name(Component.literal("Sound"))
                         .options(buildLinked(List.of(
-                                build("Sound enabled", Config().sound, TickBoxControllerBuilder::create).build(),
-                                build("Sound path:", Config().soundpath, StringControllerBuilder::create).build(),
+                                build("Sound enabled", false, Config().sound, TickBoxControllerBuilder::create).build(),
+                                build("Sound path:", "", Config().soundpath, StringControllerBuilder::create).build(),
                                 ButtonOption.createBuilder()
                                                 .name(Component.literal("List of sounds"))
                                                 .text(Component.literal("[CLICK]").withStyle(ChatFormatting.BOLD))
@@ -49,32 +50,35 @@ public class MainCategory implements TabBuilder {
         categoryBuilder.group(OptionGroup.createBuilder()
                 .name(Component.literal("Experimental"))
                         .options(buildLinked(List.of(
-                                build("Toggle when using MSB", Config().ability,  TickBoxControllerBuilder::create).build(),
-                                build("When using MSB:", Config().msbToggleValue, opt -> EnumControllerBuilder.create(opt).enumClass(PomConfig.msbToggle.class)).build()
+                                build("Toggle when using MSB", false, Config().ability,  TickBoxControllerBuilder::create).build(),
+                                build("When using MSB:", PomConfig.msbToggle.OFF, Config().msbToggleValue, opt -> EnumControllerBuilder.create(opt).enumClass(PomConfig.msbToggle.class)).build()
                         )))
                         .option(LabelOption.create(Component.literal("")))
                         .options(buildLinked(List.of(
-                                build("Extra mining speed on Gemstones", Config().extra, TickBoxControllerBuilder::create).build(),
-                                build("Amount of extra speed", Config().extraVal, DoubleFieldControllerBuilder::create).build()
+                                build("Extra mining speed on Gemstones", true, Config().extra, TickBoxControllerBuilder::create).build(),
+                                build("Amount of extra speed", 855.0, Config().extraVal, DoubleFieldControllerBuilder::create).build()
                         )))
                 .build());
     }
 
     private OptionGroup groupBuilder(String name, renderSettings prop) {
 
+        Color c1 = name.contains("Line") ? Color.red : new Color(255, 0, 0, 50);
+        Color c2 = name.contains("Line") ? Color.green : new Color(0, 255, 0, 50);
+
         return buildLinked(OptionGroup.createBuilder()
-                .option(build(name + " active", prop.active, TickBoxControllerBuilder::create).build())
+                .option(build(name + " active", true, prop.active, TickBoxControllerBuilder::create).build())
 
-                .option(build(name + " block not broken color", prop.c1, opt -> ColorControllerBuilder.create(opt).allowAlpha(true)).build())
-                .option(build(name + " block broken color", prop.c2, opt -> ColorControllerBuilder.create(opt).allowAlpha(true)).build())
+                .option(build(name + " block not broken color", c1, prop.c1, opt -> ColorControllerBuilder.create(opt).allowAlpha(true)).build())
+                .option(build(name + " block broken color", c2, prop.c2, opt -> ColorControllerBuilder.create(opt).allowAlpha(true)).build())
 
-                .option(build(name + " depth test", prop.depth, BooleanControllerBuilder::create)
+                .option(build(name + " depth test", false, prop.depth, BooleanControllerBuilder::create)
                         .description(OptionDescription.createBuilder()
                                 .image(Identifier.fromNamespaceAndPath(MOD_ID, "/img/" + name.toLowerCase() + ".png"), 64, 64)
                                 .build())
                         .build())
 
-                .optionIf(name.contains("Line"), build("Line thickness", Config().line.width, opt -> DoubleSliderControllerBuilder.create(opt).range(0.0, 10.0).step(0.1)).build())
+                .optionIf(name.contains("Line"), build("Line thickness", 2.0, Config().line.width, opt -> DoubleSliderControllerBuilder.create(opt).range(0.0, 10.0).step(0.1)).build())
                 .build());
     }
 }

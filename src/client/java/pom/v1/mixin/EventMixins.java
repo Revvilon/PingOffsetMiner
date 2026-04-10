@@ -40,8 +40,6 @@ public class EventMixins {
 
     @Inject(method = "handleSetTime", at = @At("HEAD"))
         private void onHandleSetTime(ClientboundSetTimePacket packet, CallbackInfo ci) {
-            if (!(packet instanceof ClientboundSetTimePacket)) return;
-
             long time = System.currentTimeMillis();
             tpsReceivedEvent event = new tpsReceivedEvent(time);
             PingOffsetMinerClient.EVENT_BUS.post(event);

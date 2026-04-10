@@ -6,8 +6,6 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.VanillaHudElements;
 import net.fabricmc.fabric.api.client.rendering.v1.world.WorldRenderEvents;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.minecraft.ChatFormatting;
@@ -56,6 +54,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 	public void onInitializeClient() {
         PomConfig.init();
 
+
 		EVENT_BUS.registerLambdaFactory("pom.v1", (lookupInMethod, klass) -> {
 			try {
 				return (MethodHandles.Lookup) lookupInMethod.invoke(null, klass, MethodHandles.lookup());
@@ -76,11 +75,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 		PomRendering POM_RENDER = new PomRendering();
 
 
-		HudElementRegistry.attachElementAfter(
-				VanillaHudElements.CROSSHAIR,
-				Identifier.fromNamespaceAndPath(MOD_ID, "text_test"),
-				PomScreen::render
-		);
+		PomScreen.initialize();
 
 		WorldRenderEvents.END_MAIN.register(event -> {
 			Minecraft client = Minecraft.getInstance();

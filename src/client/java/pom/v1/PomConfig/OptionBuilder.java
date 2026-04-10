@@ -13,6 +13,7 @@ import java.util.function.Function;
 public class OptionBuilder {
 
 
+
     /**
      * @param name          Option display name
      * @param prop          Option field
@@ -20,6 +21,7 @@ public class OptionBuilder {
      */
     public static <T> Option.Builder<T> build(
             String name,
+            T defaultValue,
             PomConfig.Property<T> prop,
             Function<Option<T>, ControllerBuilder<T>> controller
      ) {
@@ -27,7 +29,7 @@ public class OptionBuilder {
         return Option.<T>createBuilder()
                 .name(Component.literal(name))
                 .binding(
-                        prop.getDefault(),
+                        defaultValue,
                         prop::get,
                         prop::set
                 )

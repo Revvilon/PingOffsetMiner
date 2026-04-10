@@ -8,10 +8,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import pom.v1.Util;
-import pom.v1.events.onChatMessage;
-import pom.v1.events.onHeldSlot;
-import pom.v1.events.onSpeedUpdate;
-import pom.v1.events.worldTickEvent;
+import pom.v1.events.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +16,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static pom.v1.PingOffsetMinerClient.TOOL_STATS;
-import static pom.v1.PingOffsetMinerClient.getTPS;
 import static pom.v1.PomConfig.PomConfig.Config;
 
 public class PomStats {
@@ -65,31 +61,45 @@ public class PomStats {
         return false;
     }
 
-    private int getCooldown(ItemStack stack) {
-        if (!Config().ability.get()) return -1;
-        Pattern pattern = Pattern.compile("\\s*([0-9.]+)\\s*s");
+    final Pattern pattern2 = Pattern.compile("\\s*([0-9.]+)\\s*s");
+    final Pattern pattern1 = Pattern.compile("\\+([0-9.]+)%");
 
+    private int getCooldown(ItemStack stack) {
+
+        String line = getLine(stack, pattern2);
+        if (line == null) {
+            return -1;
+        }
+        return Integer.parseInt(line);
+    }
+
+    private double getMSB(ItemStack stack) {
+        String line = getLine(stack, pattern1);
+        if (line == null) {
+            return -1;
+        }
+        return (1+ (Double.parseDouble(line) / 100));
+    }
+
+    private String getLine(ItemStack stack, Pattern pattern) {
         boolean found = false;
 
         for (String entry : getToolTip(stack)) {
-            String clean = entry.replaceAll("$.", "");
-            Matcher matcher = pattern.matcher(clean);
+            String clean = entry.replaceAll("(?i)§.", "");
 
             if (!found && clean.contains("Ability: Mining Speed")) {
                 found = true;
                 continue;
             }
-
             if (found) {
+                Matcher matcher = pattern.matcher(clean);
+
                 if (matcher.find()) {
-                    try {
-                        return (int) (Double.parseDouble(matcher.group(1)));
-                    } catch (NumberFormatException ignored) {
-                    }
+                    return matcher.group(1);
                 }
             }
         }
-        return -1;
+        return null;
     }
 
 
@@ -99,12 +109,14 @@ public class PomStats {
         private double speed = -1;
         private boolean boost = false;
         private int cd = -1;
+        private double msb = 0;
 
         public void setItem(ItemStack newItem) {
             if (newItem == this.item) return;
             if (isTool(newItem)) {
                 this.item = newItem;
                 this.cd = getCooldown(newItem);
+                this.msb = getMSB(newItem);
             } else {
                 this.item = ItemStack.EMPTY;
                 this.cd = -1;
@@ -125,7 +137,9 @@ public class PomStats {
             this.boost = boost;
         }
 
-
+        public double getMsb() {
+            return msb;
+        }
         public int getCd() { return this.cd; }
         public double getSpeed() { return this.speed; }
         public boolean getBoost() { return this.boost; }
@@ -147,37 +161,43 @@ public class PomStats {
             "(?i)you used your mining speed boost pickaxe ability!"
     );
 
+    double speed = 0;
+
     @EventHandler
     public void onChatMessage(onChatMessage event) {
-        if (Config().ability.get()) {
             String raw = event.message.replaceAll("$.", "");
             Matcher matcher = BOOST_PATTERN.matcher(raw);
-            if (matcher.matches()) {
+            if (matcher.matches() && !TOOL_STATS.getBoost()) {
                 TOOL_STATS.setBoost(true);
+                TOOL_STATS.setSpeed(TOOL_STATS.getSpeed() * TOOL_STATS.getMsb());
                 Util.log("MSB enabled!", System.currentTimeMillis());
             }
-        }
     }
     int tickCount = 0;
     @EventHandler
     public void onTick(worldTickEvent event) {
-        if (Config().ability.get() && TOOL_STATS.getBoost()) {
+        if (TOOL_STATS.getBoost()) {
                 tickCount++;
 
-                for (String entry : Util.getTabList()) {
-                    if (entry.contains("speed boost: available!")) {
-                        tickCount = 0;
-
-                        TOOL_STATS.setBoost(false);
-                        Util.log("MSB disabled!", System.currentTimeMillis());
-                    }
-                }
-
-                if (tickCount >= (TOOL_STATS.getCd() * 20*(20/getTPS()))) {
+            if (tickCount >= (TOOL_STATS.getCd() * 20)) {
                     tickCount = 0;
                     TOOL_STATS.setBoost(false);
+                    TOOL_STATS.setSpeed(TOOL_STATS.getSpeed() / TOOL_STATS.getMsb());
                     Util.log("MSB disabled!", System.currentTimeMillis());
                 }
+        }
+    }
+
+    @EventHandler
+    public void joined(gameJoinedEvent event) {
+        if (!TOOL_STATS.getBoost()) return;
+        for (String entry : Util.getTabList()) {
+            if (entry.contains("speed boost: available!")) {
+                tickCount = 0;
+
+                TOOL_STATS.setBoost(false);
+                Util.log("MSB disabled!", System.currentTimeMillis());
+            }
         }
     }
 }

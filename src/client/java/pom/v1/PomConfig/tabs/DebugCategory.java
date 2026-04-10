@@ -21,12 +21,12 @@ public class DebugCategory implements TabBuilder {
 
     private void addOptions(ConfigCategory.Builder categoryBuilder) {
         categoryBuilder.group(buildLinked(OptionGroup.createBuilder()
-                .option(build("Debugging enabled", Config().debug, TickBoxControllerBuilder::create).build())
-                .option(build("Custom Mining Speed", Config().speed, opt -> DoubleSliderControllerBuilder.create(opt).step(100.0).range(0.0, 50000.0)).build())
-                .option(build("Custom Ping", Config().ping, opt -> DoubleSliderControllerBuilder.create(opt).range(0.0, 500.0).step(10.0)).build())
-                .option(build("Custom TPS", Config().tps, opt -> DoubleSliderControllerBuilder.create(opt).step(1.0).range(0.0, 20.0)).build())
+                .option(build("Debugging enabled", false, Config().debug, TickBoxControllerBuilder::create).build())
+                .option(build("Custom Mining Speed", 0.0, Config().speed, opt -> DoubleSliderControllerBuilder.create(opt).step(100.0).range(0.0, 50000.0)).build())
+                .option(build("Custom Ping", 0.0, Config().ping, opt -> DoubleSliderControllerBuilder.create(opt).range(0.0, 500.0).step(10.0)).build())
+                .option(build("Custom TPS", 0.0, Config().tps, opt -> DoubleSliderControllerBuilder.create(opt).step(1.0).range(0.0, 20.0)).build())
                 .build()));
 
-        categoryBuilder.option(build("Logging", Config().shouldLog, TickBoxControllerBuilder::create).build());
+        categoryBuilder.option(build("Logging", false, Config().shouldLog, TickBoxControllerBuilder::create).build());
     }
 }

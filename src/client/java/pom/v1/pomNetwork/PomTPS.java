@@ -14,7 +14,7 @@ public class PomTPS {
     private void addLatency(long realTime) {
         long timeElapsed = realTime - lastUpdate;
 
-        if (timeElapsed < 100) return;
+        if (timeElapsed <= 0) return;
 
         tickIntervals.add((float) timeElapsed);
 

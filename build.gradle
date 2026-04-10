@@ -17,6 +17,11 @@ repositories {
 		url 'https://maven.isxander.dev/releases'
 	}
 
+	maven { url 'https://maven.wispforest.io/releases/' }
+
+	// since owo 0.13.0, jitpack is required for kdl4j
+	maven { url 'https://jitpack.io' }
+
 	maven {
 		name = "Terraformers"
 		url = "https://maven.terraformersmc.com/"
@@ -53,6 +58,9 @@ fabricApi {
 }
 
 dependencies {
+
+	modImplementation "io.wispforest:owo-lib:${project.owo_version}"
+	include "io.wispforest:owo-sentinel:${project.owo_version}"
 
 	modImplementation("net.fabricmc:fabric-language-kotlin:1.13.9+kotlin.2.3.10")
 

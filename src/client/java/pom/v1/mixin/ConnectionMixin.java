@@ -14,13 +14,12 @@ import pom.v1.events.worldTickEvent;
 
 @Mixin(value = Connection.class, priority = 500)
 public abstract class ConnectionMixin {
-    @Inject(method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/protocol/Packet;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;genericsFtw(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;)V"))
+    @Inject(method = "channelRead0(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/protocol/Packet;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/Connection;genericsFtw(Lnet/minecraft/network/protocol/Packet;Lnet/minecraft/network/PacketListener;)V"), cancellable = true)
     private void channelRead0(ChannelHandlerContext channelHandlerContext, Packet<?> packet, CallbackInfo ci) {
-        if (packet instanceof ClientboundPingPacket pingPacket && pingPacket.getId() != -1) {
-
-            worldTickEvent event = new worldTickEvent();
-
+        if (packet instanceof ClientboundPingPacket pingPacket && pingPacket.getId() != 0) {
+            worldTickEvent event = new  worldTickEvent();
             PingOffsetMinerClient.EVENT_BUS.post(event);
+
         }
 
         packetReceivedEvent event = new packetReceivedEvent(packet);
