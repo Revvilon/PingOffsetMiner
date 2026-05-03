@@ -84,8 +84,8 @@ public class PomEfficiency {
 
 
     public int ticksUp = 10;
-    @EventHandler
-    public void onWorldTick(worldTickEvent event) {
+
+    public void onWorldTick() {
         this.calculateBlocks();
 
         if (POM_EFF.isMining()) {

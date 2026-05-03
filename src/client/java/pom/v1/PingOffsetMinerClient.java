@@ -1,5 +1,6 @@
 package pom.v1;
 
+import kotlinx.coroutines.Waiter;
 import meteordevelopment.orbit.EventBus;
 import meteordevelopment.orbit.IEventBus;
 import net.fabricmc.api.ClientModInitializer;
@@ -20,6 +21,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import pom.v1.PomConfig.PomConfig;
 import pom.v1.commands.pomCommands;
 import pom.v1.events.blockHitEvent;
+import pom.v1.events.worldTickEvent;
 import pom.v1.gui.PomScreen;
 import pom.v1.pomGetter.PomBlockData;
 import pom.v1.pomGetter.PomStats;
@@ -138,7 +140,8 @@ public class PingOffsetMinerClient implements ClientModInitializer {
 		});
 
 		ClientTickEvents.END_CLIENT_TICK.register(event -> {
-
+			POM_CALC.incrementTicksElapsed();
+			POM_EFF.onWorldTick();
 		});
 
 		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, outline) -> {

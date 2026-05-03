@@ -61,9 +61,4 @@ public class PomCalc {
         }
         return debugSpeed;
     }
-
-    @EventHandler
-    public void onTick(worldTickEvent event) {
-        POM_CALC.incrementTicksElapsed();
-    }
 }
