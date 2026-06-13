@@ -34,7 +34,7 @@ public class PomTPS {
                 .average()
                 .orElse(1000.0);
 
-        double tps = 20000.0 / averageTicks;
+        double tps = 20.0 / averageTicks;
 
         return Math.min(20.0, tps);
     }
