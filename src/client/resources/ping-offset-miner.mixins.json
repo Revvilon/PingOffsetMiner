@@ -13,6 +13,7 @@
   },
   "client": [
     "EventMixins",
+    "ClientCommonPacketListenerImplMixin",
     "PingDebugMonitorMixin",
     "RenderMixin"
   ]
