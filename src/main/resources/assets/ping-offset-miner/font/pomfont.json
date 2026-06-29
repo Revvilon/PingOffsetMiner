@@ -1,0 +1,11 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "ping-offset-miner:minecraft.ttf",
+      "shift": [0, 0],
+      "size": 10.0,
+      "oversample": 3.0
+    }
+  ]
+}

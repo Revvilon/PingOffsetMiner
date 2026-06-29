@@ -1,0 +1,21 @@
+
+{
+    "Private Island": false,
+    "Garden": false,
+    "Hub": false,
+    "The Barn": false,
+    "Mushroom Desert": false,
+    "The Park": false,
+    "Spider's Den": false,
+    "The End": false,
+    "Crimson Isle": false,
+    "Gold Mine": true,
+    "Deep Caverns": true,
+    "Dwarven Mines": true,
+    "Crystal Hollows": true,
+    "Mineshaft": true,
+    "Jerry's Workshop": false,
+    "Dungeon Hub": false,
+    "Backwater Bayou": false,
+    "Galatea": false
+}

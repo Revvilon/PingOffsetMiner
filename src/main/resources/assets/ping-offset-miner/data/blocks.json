@@ -1,0 +1,137 @@
+[
+  {
+    "block": ["coal_block"],
+    "id": "minecraft:coal_block",
+    "hardness": 600
+  },
+  {
+    "block": ["obsidian"],
+    "id": "minecraft:obsidian",
+    "hardness": 500
+  },
+  {
+    "block": ["gold_block"],
+    "id": "minecraft:gold_block",
+    "hardness": 600
+  },
+  {
+    "block": ["diamond_block"],
+    "id": "minecraft:diamond_block",
+    "hardness": 600
+  },
+  {
+    "block": ["emerald_block"],
+    "id": "minecraft:emerald_block",
+    "hardness": 600
+  },
+  {
+    "block": ["iron_block"],
+    "id": "minecraft:iron_block",
+    "hardness": 600
+  },
+  {
+    "block": ["lapis_block"],
+    "id": "minecraft:lapis_block",
+    "hardness": 600
+  },
+  {
+    "block": ["redstone_block"],
+    "id": "minecraft:redstone_block",
+    "hardness": 600
+  },
+  {
+    "block": ["gray_wool", "cyan_terracotta"],
+    "id": "skyblock:gray_mithril",
+    "hardness": 500
+  },
+  {
+    "block": ["prismarine", "prismarine_bricks", "dark_prismarine"],
+    "id": "skyblock:green_mithril",
+    "hardness": 800
+  },
+  {
+    "block": ["light_blue_wool"],
+    "id": "skyblock:blue_mithril",
+    "hardness": 1500
+  },
+  {
+    "block": ["polished_diorite"],
+    "id": "skyblock:titanium",
+    "hardness": 2000
+  },
+  {
+    "block": ["clay", "infested_cobblestone"],
+    "id": "skyblock:tungsten",
+    "hardness": 5600
+  },
+  {
+    "block": ["brown_terracotta", "terracotta", "smooth_red_sandstone"],
+    "id": "skyblock:umber",
+    "hardness": 5600
+  },
+  {
+    "block": ["packed_ice"],
+    "id": "skyblock:glacite",
+    "hardness": 6000
+  },
+  {
+    "block": ["red_stained_glass", "red_stained_glass_pane"],
+    "id": "skyblock:ruby_gemstone",
+    "hardness": 2300
+  },
+  {
+    "block": ["orange_stained_glass", "orange_stained_glass_pane"],
+    "id": "skyblock:amber_gemstone",
+    "hardness": 3000
+  },
+  {
+    "block": ["light_blue_stained_glass", "light_blue_stained_glass_pane"],
+    "id": "skyblock:sapphire_gemstone",
+    "hardness": 3000
+  },
+  {
+    "block": ["lime_stained_glass", "lime_stained_glass_pane"],
+    "id": "skyblock:jade_gemstone",
+    "hardness": 3000
+  },
+  {
+    "block": ["purple_stained_glass", "purple_stained_glass_pane"],
+    "id": "skyblock:amethyst_gemstone",
+    "hardness": 3000
+  },
+  {
+    "block": ["white_stained_glass", "white_stained_glass_pane"],
+    "id": "skyblock:opal_gemstone",
+    "hardness": 3000
+  },
+  {
+    "block": ["yellow_stained_glass", "yellow_stained_glass_pane"],
+    "id": "skyblock:topaz_gemstone",
+    "hardness": 3800
+  },
+  {
+    "block": ["magenta_stained_glass", "magenta_stained_glass_pane"],
+    "id": "skyblock:jasper_gemstone",
+    "hardness": 4800
+  },
+  {
+    "block": ["black_stained_glass", "black_stained_glass_pane"],
+    "id": "skyblock:onyx_gemstone",
+    "hardness": 5200
+  },
+  {
+    "block": ["blue_stained_glass", "blue_stained_glass_pane"],
+    "id": "skyblock:aquamarine_gemstone",
+    "hardness": 5200
+  },
+  {
+    "block": ["brown_stained_glass", "brown_stained_glass_pane"],
+    "id": "skyblock:citrine_gemstone",
+    "hardness": 5200
+  },
+  {
+    "block": ["green_stained_glass", "green_stained_glass_pane"],
+    "id": "skyblock:peridot_gemstone",
+    "hardness": 5200
+  }
+]
