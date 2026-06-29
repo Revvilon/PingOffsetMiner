@@ -131,7 +131,6 @@ public class Util {
         if ((System.currentTimeMillis() - logs.get(text)) <= 2000) return;
         Util.sendMsg(Component.literal(text).withStyle(ChatFormatting.RED, ChatFormatting.BOLD));
         logs.replace(text, time);
-
-
     }
+
 }

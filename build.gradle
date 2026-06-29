@@ -1,5 +1,5 @@
 plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+	id 'net.fabricmc.fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 	id 'org.jetbrains.kotlin.jvm'
 }
@@ -59,24 +59,22 @@ fabricApi {
 
 dependencies {
 
-	modImplementation "io.wispforest:owo-lib:${project.owo_version}"
+	implementation "io.wispforest:owo-lib:${project.owo_version}"
 	include "io.wispforest:owo-sentinel:${project.owo_version}"
 
-	modImplementation("net.fabricmc:fabric-language-kotlin:1.13.9+kotlin.2.3.10")
+	implementation("net.fabricmc:fabric-language-kotlin:1.13.9+kotlin.2.3.10")
 
 
-	modImplementation "dev.isxander:yet-another-config-lib:${project.yacl_version}"
 
 	// To change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
 
-	mappings loom.officialMojangMappings()
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+	implementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-	modImplementation("com.terraformersmc:modmenu:${project.modmenu_version}")
+	implementation("com.terraformersmc:modmenu:${project.modmenu_version}")
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	implementation "meteordevelopment:orbit:${project.orbit_version}"
 	annotationProcessor "meteordevelopment:orbit:${project.orbit_version}"
 	include "meteordevelopment:orbit:${project.orbit_version}"
@@ -96,7 +94,7 @@ processResources {
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 21
+	it.options.release = 25
 }
 
 java {
@@ -133,5 +131,5 @@ publishing {
 	}
 }
 kotlin {
-	jvmToolchain(21)
+	jvmToolchain(25)
 }
