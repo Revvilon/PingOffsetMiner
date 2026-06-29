@@ -1,10 +1,15 @@
 {
   "required": true,
-  "package": "pom.v1.mixin",
+  "package": "pom.rewrite.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "ClientMixin",
     "ConnectionMixin",
-    "InventoryMixin"
+    "DebugMonitorMixin",
+    "GameModeAccessor",
+    "GameRenderMixin",
+    "InventoryMixin",
+    "LevelRenderMixin"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -13,8 +18,5 @@
     "requireAnnotations": false
   },
   "client": [
-    "EventMixins",
-    "PingDebugMonitorMixin",
-    "RenderMixin"
   ]
 }
