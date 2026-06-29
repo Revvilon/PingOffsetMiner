@@ -2,8 +2,8 @@
 	"schemaVersion": 1,
 	"id": "ping-offset-miner",
 	"version": "${version}",
-	"name": "Ping Offset Miner",
-	"description": "The ping gliding mod",
+	"name": "ping offset miner",
+	"description": "provides visual feedback for mining",
 	"authors": [
 		"xevalia"
 	],
@@ -14,16 +14,20 @@
 		"main": [
 		],
 		"client": [
-			"pom.rewrite.PingOffsetMinerClient"
+			"pom.v1.PingOffsetMinerClient"
+		],
+		"modmenu": [
+			"pom.v1.modmenu.ModMenuIntegration"
 		]
 	},
 	"mixins": [
 		"ping-offset-miner.mixins.json"
 	],
 	"depends": {
+		"yet_another_config_lib_v3": ">=3.8.2",
 		"fabricloader": ">=0.18.4",
-		"minecraft": "26.1",
-		"java": ">=25",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
 		"fabric-api": "*"
 	}
 }
