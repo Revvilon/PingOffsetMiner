@@ -73,6 +73,8 @@ dependencies {
 	implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 	implementation "meteordevelopment:orbit:${project.orbit_version}"
 	annotationProcessor "meteordevelopment:orbit:${project.orbit_version}"
+	include "meteordevelopment:orbit:${project.orbit_version}"
+
 
 	implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
 
