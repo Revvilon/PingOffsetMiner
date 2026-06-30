@@ -12,6 +12,7 @@ import pom.rewrite.utility.Util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,8 +34,7 @@ public class StatsReader {
         List<Component> toolTipLines = stack.getTooltipLines(context, player, flag);
 
         for (Component line : toolTipLines) {
-            String lineAsString = line.toString();
-            tooltip.add(lineAsString);
+            tooltip.add(line.getString());
         }
         return tooltip;
     }
@@ -51,28 +51,43 @@ public class StatsReader {
     }
 
     private int getCooldown(ItemStack stack) {
-        String line = getLine(stack, cooldownPattern);
-
-        return Integer.parseInt(line) * 20;
+        return getLine(stack, cooldownPattern)
+                .map(line -> (int) (Float.parseFloat(line) * 20))
+                .orElse(0);
     }
     private float getMsbMultiplier(ItemStack stack) {
-        String line = getLine(stack, msbPattern);
-        return 1 + (Float.parseFloat(line) / 100);
+        return getLine(stack, msbPattern)
+                .map(line -> 1 + (Float.parseFloat(line) / 100))
+                .orElse(1.0f);
+    }
+
+    private boolean isMsbFound(ItemStack stack) {
+        return getToolTip(stack).stream()
+                .anyMatch(line -> line.contains("Ability: Mining Speed"));
     }
 
     private final Pattern cooldownPattern = Pattern.compile("\\s*([0-9.]+)\\s*s");
     private final Pattern msbPattern = Pattern.compile("\\+([0-9.]+)%");
 
-    private String getLine(ItemStack stack, Pattern pattern) {
-        return getToolTip(stack).stream()
+    private Optional<String> getLine(ItemStack stack, Pattern pattern) {
+        List<String> tooltip = getToolTip(stack);
+
+        int index = -1;
+        for (int i = 0; i < tooltip.size(); i++) {
+            if (tooltip.get(i).contains("Ability: Mining Speed")) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index == -1) return Optional.empty();
+
+        return tooltip.subList(index + 1, tooltip.size()).stream()
                 .map(line -> line.replaceAll("(?i)§.", ""))
-                .dropWhile(line -> !line.contains("Ability: Mining Speed"))
-                .skip(1)
                 .map(pattern::matcher)
                 .filter(Matcher::find)
                 .map(matcher -> matcher.group(1))
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
 
@@ -101,7 +116,7 @@ public class StatsReader {
 
         stats.setItem(asTool(newItem));
 
-        if (stats.isActive()) {
+        if (stats.isActive() && isMsbFound(newItem)) {
             stats.setMsbCooldown(getCooldown(newItem));
             stats.setMsbMultiplier(getMsbMultiplier(newItem));
         }
