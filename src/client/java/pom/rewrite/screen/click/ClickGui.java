@@ -3,15 +3,18 @@ package pom.rewrite.screen.click;
 import com.google.common.collect.Lists;
 import io.wispforest.owo.ui.base.BaseOwoScreen;
 import io.wispforest.owo.ui.component.*;
-import io.wispforest.owo.ui.container.FlowLayout;
-import io.wispforest.owo.ui.container.OverlayContainer;
-import io.wispforest.owo.ui.container.ScrollContainer;
-import io.wispforest.owo.ui.container.UIContainers;
+import io.wispforest.owo.ui.container.*;
 import io.wispforest.owo.ui.core.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.components.PlainTextButton;
+import net.minecraft.client.resources.sounds.Sound;
+import net.minecraft.client.sounds.SoundBufferLibrary;
+import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.util.Util;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -37,9 +40,12 @@ import pom.rewrite.screen.click.fragments.Module;
 import pom.rewrite.screen.hud.HudEditScreen;
 import pom.rewrite.utility.block.BlockObject;
 import pom.rewrite.utility.block.BlockUtil;
+import pom.rewrite.utility.sound.SoundRegistryManager;
 
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.function.Consumer;
 
 import static pom.rewrite.PingOffsetMinerClient.MOD_ID;
@@ -132,9 +138,10 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
                                         "Sound alert for mining"
                                         ),
                                 new Module(
-                                        new TextSelector("", SoundAlert.soundPath),
-                                        "Sound path"
-                                        ),
+                                        new EnumToggle<>(SoundAlert.soundSource),
+                                        "What sound slider should control sound"
+                                ),
+                                new CollapsibleSelectorSearch(SoundAlert.soundSet, "Sounds"),
                                 new Module(
                                         new CleanButton("Click", press -> Util.getPlatform().openUri("https://www.digminecraft.com/lists/sound_list_pc.php")),
                                         "Website with available sounds"
@@ -396,6 +403,96 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
             toggle.onToggled().subscribe(setting::set);
 
             this.child(toggle);
+        }
+    }
+
+    public static final class EnumToggle<T extends Enum<T>> extends FlowLayout {
+
+        public SettingEnum<T> setting;
+
+        EnumToggle(SettingEnum<T>  setting) {
+            super(Sizing.content(), Sizing.content(), Algorithm.HORIZONTAL);
+
+            this.setting = setting;
+
+            EnumClicker<T> enumClicker = new EnumClicker<>(setting.value().name(), setting.defaultValue(), setting.values);
+
+            this.child(enumClicker);
+
+        }
+    }
+
+    public static class CollapsibleSelectorSearch extends FlowLayout {
+
+        SettingList<String> setting;
+        FlowLayout soundsContainer;
+
+        CollapsibleSelectorSearch(SettingList<String> setting, String name) {
+            super(Sizing.fill(), Sizing.content(), Algorithm.VERTICAL);
+
+            this.setting = setting;
+            this.padding(Insets.of(5));
+            this.surface(ScreenUtil.customSurface(mainColor));
+
+
+            soundsContainer = UIContainers.verticalFlow(Sizing.fill(), Sizing.content());
+
+
+            TextBoxComponent addBox = UIComponents.textBox(Sizing.fill(25));
+            addBox.setSuggestion("Sound path...");
+            addBox.onChanged().subscribe(query -> {
+                if (query.isEmpty()) addBox.setSuggestion("Sound path...");
+                else addBox.setSuggestion("");
+            });
+            CleanButton addButton = new CleanButton("Add", _ -> {
+                boolean isSound = pom.rewrite.utility.Util.isSoundEvent(addBox.getValue());
+                if (isSound) {
+                    this.setting.addValue(addBox.getValue());
+                    this.setting.set(this.setting.values);
+                    addBox.text("");
+                    addBox.setSuggestion("Added!");
+                    updateContainer();
+                    return;
+                }
+                addBox.text("");
+                addBox.setSuggestion("Invalid sound!");
+            });
+            addButton.padding(Insets.right(5));
+
+            ScrollContainer<FlowLayout> scroll = UIContainers.verticalScroll(Sizing.content(), Sizing.fill(), soundsContainer);
+            scroll.scrollbarThiccness(10);
+            CollapsibleContainer collapsible = UIContainers.collapsible(Sizing.content(), Sizing.content(), Component.literal(name), false);
+            collapsible.child(scroll);
+            collapsible.titleLayout().child(0, addBox).child(1, addButton);
+            collapsible.titleLayout().alignment(HorizontalAlignment.LEFT, VerticalAlignment.CENTER);
+
+            this.child(collapsible);
+
+            updateContainer();
+        }
+
+        private void updateContainer() {
+            if (soundsContainer == null) return;
+
+            setting.removeValue(id);
+            setting.set(this.setting.values);
+
+            soundsContainer.clearChildren();
+            setting.values.forEach(value -> soundsContainer.child(getSoundsContainer(value)));
+        }
+
+        private FlowLayout getSoundsContainer(String id) {
+            FlowLayout container = UIContainers.horizontalFlow(Sizing.fill(), Sizing.content());
+            container.alignment(HorizontalAlignment.LEFT, VerticalAlignment.CENTER);
+            container.gap(5);
+            CleanButton cleanButton = new CleanButton("✖", _ -> {
+                setting.removeValue(id);
+                updateContainer();
+            });
+            LabelComponent label = UIComponents.label(Component.literal(id));
+
+            container.child(cleanButton).child(label);
+            return container;
         }
     }
 
