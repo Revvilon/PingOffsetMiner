@@ -126,6 +126,7 @@ public class Util {
     }
 
     public static int getTicksNeededNoOffset(int hardness, int miningSpeed) {
+        if (miningSpeed <= 0) return 0;
         return Math.max(4, (hardness * 30) / miningSpeed);
     }
 
