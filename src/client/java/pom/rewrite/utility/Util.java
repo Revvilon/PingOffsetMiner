@@ -142,4 +142,7 @@ public class Util {
         return count;
     }
 
+    public static boolean isSoundEvent(String identifier) {
+        return BuiltInRegistries.SOUND_EVENT.getOptional(Identifier.parse(identifier)).isPresent();
+    }
 }
