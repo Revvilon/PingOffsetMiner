@@ -1,5 +1,6 @@
 package pom.rewrite.config.settings;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -28,6 +29,15 @@ public class SettingGeneric {
             case JsonObject jsonObject -> jsonObject;
             case Enum<?> en ->  new JsonPrimitive(en.name());
             case Color color -> new JsonPrimitive(color.argb());
+
+            case Iterable<?> iterable -> {
+                JsonArray array = new JsonArray();
+                for (Object o : iterable) {
+                    array.add(this.parse(o));
+                }
+                yield array;
+            }
+
             default ->
                 throw new IllegalArgumentException("Cannot parse " + value);
         };
