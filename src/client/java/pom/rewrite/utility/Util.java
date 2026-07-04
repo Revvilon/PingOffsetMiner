@@ -87,6 +87,24 @@ public class Util {
     }
 
     public static int getTicksNeeded(int hardness, int miningSpeed) {
+        if (miningSpeed <= 0) return 0;
+        if (miningSpeed >= hardness * 30) return 0;
+
+        double rawTicksToBreak = (double) (hardness * 30) / miningSpeed;
+
+        double debugTps = ServerStats.getTps();
+        double pingSec = ServerStats.getPing() / 1000.0;
+
+        double pingMath = rawTicksToBreak - pingSec * debugTps;
+
+        double pingOffset = rawTicksToBreak - pingMath > pingMath
+                ? rawTicksToBreak - pingMath
+                : rawTicksToBreak;
+
+        return (int) Math.max(4, pingOffset);
+
+        /*
+
         if (miningSpeed >= hardness * 30) return 0;
 
         double rawTicksToBreak = (double) (hardness * 30) / miningSpeed;
