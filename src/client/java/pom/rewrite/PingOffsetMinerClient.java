@@ -21,6 +21,8 @@ import pom.rewrite.utility.block.BlockUtil;
 import pom.rewrite.utility.render.RenderClass;
 import pom.rewrite.utility.server.IslandUtils;
 import pom.rewrite.utility.server.ServerStats;
+import pom.rewrite.utility.sound.SoundRegistryManager;
+import pom.rewrite.utility.sound.SoundUtil;
 import pom.rewrite.utility.stats.EfficiencyStats;
 import pom.rewrite.utility.stats.MiningStats;
 import pom.rewrite.utility.stats.StatsReader;
@@ -56,6 +58,7 @@ public class PingOffsetMinerClient implements ClientModInitializer {
         IslandUtils.init();
         HudManager.init();
         EfficiencyStats.getInstance().init();
+        SoundRegistryManager.init();
 
         ClientCommandRegistrationCallback.EVENT.register((dispatcher, a) -> new CommandHandler().registerCommands(dispatcher));
 
@@ -88,5 +91,6 @@ public class PingOffsetMinerClient implements ClientModInitializer {
         EVENT_BUS.subscribe(TickStats.instance());
         EVENT_BUS.subscribe(EfficiencyStats.getInstance());
         EVENT_BUS.subscribe(ServerStats.class);
+        EVENT_BUS.subscribe(new SoundUtil());
     }
 }
