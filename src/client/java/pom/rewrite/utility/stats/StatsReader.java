@@ -91,7 +91,7 @@ public class StatsReader {
     }
 
 
-    private final Pattern miningSpeedPattern = Pattern.compile("Mining Speed: ⸕([0-9.]+)");
+    private final Pattern miningSpeedPattern = Pattern.compile("Mining Speed: \\uE015([0-9.]+)");
 
     public boolean miningSpeedFound() {
         return Util.getFromList(Util.getTabList(), s -> s, miningSpeedPattern, Integer::parseInt) != null;
