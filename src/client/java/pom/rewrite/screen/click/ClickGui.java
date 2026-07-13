@@ -419,6 +419,8 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
 
             this.child(enumClicker);
 
+            enumClicker.onChanged().subscribe(setting::set);
+
         }
     }
 
