@@ -119,6 +119,9 @@ public class Util {
         double totalTicks = (double) ticksToBreak - pingOffset;
 
         return (int) Math.max(4, Math.ceil(totalTicks));
+
+
+        */
     }
 
     public static int getTicksNeeded(BlockObject block, int miningSpeed) {
