@@ -3,7 +3,14 @@ package pom.rewrite.utility;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.PlayerInfo;
+import net.minecraft.client.resources.sounds.AbstractSoundInstance;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.Sound;
+import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.sounds.SoundEvent;
 import pom.rewrite.features.debug.Logging;
 import pom.rewrite.utility.block.BlockObject;
 import pom.rewrite.utility.server.ServerStats;
@@ -112,10 +119,11 @@ public class Util {
 
         long ping = ServerStats.getPing();
         double tps = ServerStats.getTps();
-        double pingInTicks = (ping * tps) / 1000.0;
-        pingInTicks = Math.max(0.0, pingInTicks);
 
-        double pingOffset = Math.min(pingInTicks, ticksToBreak - 1);
+        double oneWayPingInTicks = ((ping * tps) / 1000.0) / 2.0;
+        oneWayPingInTicks = Math.max(0.0, oneWayPingInTicks);
+
+        double pingOffset = Math.min(oneWayPingInTicks, ticksToBreak - 1);
         double totalTicks = (double) ticksToBreak - pingOffset;
 
         return (int) Math.max(4, Math.ceil(totalTicks));
