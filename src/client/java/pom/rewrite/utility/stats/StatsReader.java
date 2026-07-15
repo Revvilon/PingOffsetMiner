@@ -134,7 +134,7 @@ public class StatsReader {
         Matcher matcher = msbChatPattern.matcher(msg);
         if (matcher.matches()) {
             stats.setMsbActive(true);
-            stats.setMiningSpeed((int) (stats.getMiningSpeed() * stats.getMsbMultiplier()));
+            stats.setMiningSpeed((int) (stats.getBaseMiningSpeed() * stats.getMsbMultiplier()));
         }
     }
 
@@ -147,7 +147,7 @@ public class StatsReader {
         if (ticks >= stats.getMsbCooldown()) {
             ticks = 0;
             stats.setMsbActive(false);
-            stats.setMiningSpeed((int) (stats.getMiningSpeed() / stats.getMsbMultiplier()));
+            stats.setMiningSpeed((int) (stats.getBaseMiningSpeed() / stats.getMsbMultiplier()));
         }
     }
 

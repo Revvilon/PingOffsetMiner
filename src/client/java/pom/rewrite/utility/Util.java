@@ -97,43 +97,27 @@ public class Util {
         return "";
     }
 
-    public static int getTicksNeeded(int hardness, int miningSpeed) {
+    public static int getTicksNeededProgress(int hardness, int miningSpeed, int ticksElapsed, double progressMade) {
         if (miningSpeed <= 0) return 0;
-        if (miningSpeed >= hardness * 30) return 0;
+        if (miningSpeed >= hardness * 30 && ticksElapsed == 0) return 0;
 
-        double rawTicksToBreak = (double) (hardness * 30) / miningSpeed;
+        double remainingProgress = Math.max(0.0, (hardness * 30.0) - progressMade);
+        double rawTicksNeeded = ticksElapsed + remainingProgress / miningSpeed;
 
         double debugTps = ServerStats.getTps();
         double pingSec = ServerStats.getPing() / 1000.0;
 
-        double pingMath = rawTicksToBreak - pingSec * debugTps;
+        double pingMath = rawTicksNeeded - pingSec * debugTps;
 
-        double pingOffset = rawTicksToBreak - pingMath > pingMath
-                ? rawTicksToBreak - pingMath
-                : rawTicksToBreak;
+        double pingOffset = rawTicksNeeded - pingMath > pingMath
+                ? rawTicksNeeded - pingMath
+                : rawTicksNeeded;
 
         return (int) Math.max(4, pingOffset);
+    }
 
-        /*
-
-        if (miningSpeed >= hardness * 30) return 0;
-
-        double rawTicksToBreak = (double) (hardness * 30) / miningSpeed;
-        int ticksToBreak = (int) Math.ceil(rawTicksToBreak);
-
-        long ping = ServerStats.getPing();
-        double tps = ServerStats.getTps();
-
-        double oneWayPingInTicks = ((ping * tps) / 1000.0) / 2.0;
-        oneWayPingInTicks = Math.max(0.0, oneWayPingInTicks);
-
-        double pingOffset = Math.min(oneWayPingInTicks, ticksToBreak - 1);
-        double totalTicks = (double) ticksToBreak - pingOffset;
-
-        return (int) Math.max(4, Math.ceil(totalTicks));
-
-
-        */
+    public static int getTicksNeeded(int hardness, int miningSpeed) {
+        return getTicksNeededProgress(hardness, miningSpeed, 0, 0.0);
     }
 
     public static int getTicksNeeded(BlockObject block, int miningSpeed) {
