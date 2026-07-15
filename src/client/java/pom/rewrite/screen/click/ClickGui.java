@@ -83,6 +83,9 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
                         new Module(new FeatureToggle("", PingOffsetMiner.instance),
                                 "Toggles Ping Offset Miner"
                                 ),
+                        new Module(new Toggle("", PingOffsetMiner.precisionMining),
+                                "Toggles Precision Mining Boost (+30% speed)"
+                                ),
                         new GroupLayout("Outline",
                                 new Module(
                                         new FeatureToggle("", OutlineRender.instance),

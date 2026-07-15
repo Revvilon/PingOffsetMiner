@@ -47,7 +47,7 @@ public class MiningStats {
     public void setMiningSpeed(int miningSpeed) { this.miningSpeed = miningSpeed; }
     public int getMiningSpeed() {
         int baseSpeed = CustomStats.instance.isEnabled() ? CustomStats.customSpeed.getInt() : miningSpeed;
-        if (isAimingAtPrecisionParticle()) {
+        if (pom.rewrite.features.PingOffsetMiner.precisionMining.getBool() && isAimingAtPrecisionParticle()) {
             return (int) (baseSpeed * 1.30);
         }
         return baseSpeed;
@@ -81,6 +81,11 @@ public class MiningStats {
 
     @EventHandler
     public void onTick(clientTick tick) {
+        if (!pom.rewrite.features.PingOffsetMiner.precisionMining.getBool()) {
+            aimingAtPrecisionParticle = false;
+            hasParticle = false;
+            return;
+        }
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null || mc.player == null || !hasParticle) {
             aimingAtPrecisionParticle = false;
@@ -121,6 +126,7 @@ public class MiningStats {
 
     @EventHandler
     public void onPacketReceived(packetReceived event) {
+        if (!pom.rewrite.features.PingOffsetMiner.precisionMining.getBool()) return;
         if (event.value instanceof ClientboundLevelParticlesPacket packet) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null || mc.player == null) return;
