@@ -16,14 +16,6 @@ classes/
 *.ipr
 *.iws
 
-# vscode
-
-.settings/
-.vscode/
-bin/
-.classpath
-.project
-
 # macos
 
 *.DS_Store
