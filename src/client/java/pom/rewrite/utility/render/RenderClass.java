@@ -38,9 +38,9 @@ public class RenderClass {
                 RenderPipeline outlinePipeline = CustomPipelines.getOutline(OutlineRender.depthToggle.getBool());
 
                 // Render Highlight
-                extractAndDraw(context, voxelShape, blockObject.pos, highlightColor, highlightPipeline);
+                if (HighlightRender.instance.isEnabled()) extractAndDraw(context, voxelShape, blockObject.pos, highlightColor, highlightPipeline);
                 // Render Outline
-                extractAndDraw(context, voxelShape, blockObject.pos, outlineColor, lineWidth, outlinePipeline);
+                if (OutlineRender.instance.isEnabled()) extractAndDraw(context, voxelShape, blockObject.pos, outlineColor, lineWidth, outlinePipeline);
             }
         });
 
