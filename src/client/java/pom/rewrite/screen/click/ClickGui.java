@@ -24,6 +24,7 @@ import pom.rewrite.config.Feature;
 import pom.rewrite.config.settings.*;
 import pom.rewrite.features.PingOffsetMiner;
 import pom.rewrite.features.debug.CustomStats;
+import pom.rewrite.features.debug.HSMModern;
 import pom.rewrite.features.debug.Logging;
 import pom.rewrite.features.debug.Profiler;
 import pom.rewrite.features.gui.EfficiencyDisplay;
@@ -171,7 +172,8 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
                         ),
                         new GroupLayout("Miscellaneous",
                                     new Module(new IntInput("", CustomStats.extraSpeed), "Amount of extra speed applied to gemstones"),
-                                new Module(new IntInput("", CustomStats.extraSpeedMetal), "Amount of extra speed applied to metals")
+                                new Module(new IntInput("", CustomStats.extraSpeedMetal), "Amount of extra speed applied to metals"),
+                                new Module(new FeatureToggle("", HSMModern.instance), "Toggles HSM")
                                 )
                 )
         );
