@@ -28,7 +28,7 @@ public class SoundUtil {
 
         if (mc.player == null || mc.level == null || !SoundAlert.instance.isEnabled()) return;
 
-        for (String sounds : soundPath.values) {
+        for (String sounds : soundPath.getSet()) {
             Optional<SoundEvent> event = getSoundEvent(sounds);
             event.ifPresent(soundEvent -> mc.getSoundManager().play(getSoundInstance(soundEvent, setting.value())));
         }

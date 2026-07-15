@@ -19,6 +19,7 @@ import net.minecraft.util.Util;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import pom.rewrite.config.ConfigHandler;
 import pom.rewrite.config.Feature;
 import pom.rewrite.config.settings.*;
@@ -448,20 +449,7 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
                 if (query.isEmpty()) addBox.setSuggestion("Sound path...");
                 else addBox.setSuggestion("");
             });
-            CleanButton addButton = new CleanButton("Add", _ -> {
-                boolean isSound = pom.rewrite.utility.Util.isSoundEvent(addBox.getValue());
-                if (isSound) {
-                    this.setting.addValue(addBox.getValue());
-                    this.setting.set(this.setting.values);
-                    addBox.text("");
-                    addBox.setSuggestion("Added!");
-                    updateContainer();
-                    return;
-                }
-                addBox.text("");
-                addBox.setSuggestion("Invalid sound!");
-            });
-            addButton.padding(Insets.right(5));
+            CleanButton addButton = getCleanButton(addBox);
 
             ScrollContainer<FlowLayout> scroll = UIContainers.verticalScroll(Sizing.content(), Sizing.fill(), soundsContainer);
             scroll.scrollbarThiccness(10);
@@ -475,14 +463,28 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
             updateContainer();
         }
 
+        private @NonNull CleanButton getCleanButton(TextBoxComponent addBox) {
+            CleanButton addButton = new CleanButton("Add", _ -> {
+                boolean isSound = pom.rewrite.utility.Util.isSoundEvent(addBox.getValue());
+                if (isSound) {
+                    this.setting.addValue(addBox.getValue());
+                    addBox.text("");
+                    addBox.setSuggestion("Added!");
+                    updateContainer();
+                    return;
+                }
+                addBox.text("");
+                addBox.setSuggestion("Invalid sound!");
+            });
+            addButton.padding(Insets.right(5));
+            return addButton;
+        }
+
         private void updateContainer() {
             if (soundsContainer == null) return;
 
-            setting.removeValue(id);
-            setting.set(this.setting.values);
-
             soundsContainer.clearChildren();
-            setting.values.forEach(value -> soundsContainer.child(getSoundsContainer(value)));
+            setting.getSet().forEach(value -> soundsContainer.child(getSoundsContainer(value)));
         }
 
         private FlowLayout getSoundsContainer(String id) {
