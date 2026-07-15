@@ -7,10 +7,14 @@ import net.minecraft.client.resources.sounds.AbstractSoundInstance;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.Sound;
 import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.TypedDataComponent;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
+import pom.rewrite.PingOffsetMinerClient;
 import pom.rewrite.features.debug.Logging;
 import pom.rewrite.utility.block.BlockObject;
 import pom.rewrite.utility.server.ServerStats;
@@ -155,5 +159,66 @@ public class Util {
 
     public static boolean isSoundEvent(String identifier) {
         return BuiltInRegistries.SOUND_EVENT.getOptional(Identifier.parse(identifier)).isPresent();
+    }
+
+    public static boolean compareComponents(DataComponentMap component1, DataComponentMap component2) {
+        byte x = 0;
+
+        for (TypedDataComponent<?> i : component1) {
+            DataComponentType<?> type = i.type();
+
+            if (!component2.has(type)) {
+                continue;
+            }
+
+            Object value2 = component2.get(type);
+            String val1String = String.valueOf(i.value());
+            String val2String = String.valueOf(value2);
+
+            if (!Objects.equals(val1String, val2String)) {
+                String tagName = type.toString();
+
+                if (tagName.equals("minecraft:damage") || tagName.equals("minecraft:lore")) {
+                    x |= 2;
+                } else if (tagName.equals("minecraft:custom_data")) {
+                    if (compareUUIDS(val1String, val2String)) {
+                        x |= 4;
+                    } else {
+                        x |= 1;
+                    }
+                }
+            }
+        }
+        return ((x & 2) == 2 || (x & 4) == 4) && (x & 1) == 0;
+    }
+
+    public static boolean compareUUIDS(String val1, String val2) {
+        try {
+            String uuid1 = getUUID(val1);
+            String uuid2 = getUUID(val2);
+            return uuid1 != null && uuid1.equals(uuid2);
+        } catch (Exception e) {
+            PingOffsetMinerClient.LOGGER.error("Error comparing UUIDS");
+            return false;
+        }
+    }
+
+    private static String getUUID(String str) {
+        if (str == null) return null;
+
+        int uuidIndex = str.indexOf("uuid:");
+        if (uuidIndex != -1) {
+            int firstQuote = str.indexOf("\"", uuidIndex);
+            if (firstQuote != -1) {
+                int secondQuote = str.indexOf("\"", firstQuote + 1);
+                if (secondQuote != -1) {
+                    String sub = str.substring(firstQuote + 1, secondQuote);
+                    if (sub.length() == 36) {
+                        return sub;
+                    }
+                }
+            }
+        }
+        return str;
     }
 }
