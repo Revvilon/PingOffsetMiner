@@ -97,7 +97,7 @@ public class Util {
     }
 
     public static double convertSpeed(String entry) {
-        Pattern pattern = Pattern.compile("Mining Speed: ⸕([0-9.]+)");
+        Pattern pattern = Pattern.compile("Mining Speed: \\uE015([0-9.]+)");
         Matcher matcher = pattern.matcher(entry);
 
         if (matcher.find()) {
