@@ -1,10 +1,12 @@
 package pom.rewrite.utility.stats;
 
 import meteordevelopment.orbit.EventHandler;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import pom.rewrite.events.clientTick;
+import pom.rewrite.events.startBreak;
 import pom.rewrite.features.debug.CustomStats;
 import pom.rewrite.utility.Util;
 import pom.rewrite.utility.block.BlockData;
@@ -25,6 +27,7 @@ public class TickStats {
     private int ticksElapsed = 0;
     private double progressMade = 0.0;
     private BlockPos tempPos;
+    private int startBreak = 0;
 
     private final MiningStats miningStats = MiningStats.instance();
     private final BlockData blockData = BlockData.getInstance();
@@ -43,6 +46,11 @@ public class TickStats {
     }
 
     @EventHandler
+    private void onStartBreak(startBreak event) {
+        this.startBreak = event.time;
+    }
+
+    @EventHandler
 
     private void tickElapsed(clientTick event) {
         if (mc.level == null || mc.player == null || mc.gameMode == null) {
@@ -50,6 +58,7 @@ public class TickStats {
 
             return;
         }
+
 
         if (blockData.getCurrentBlock() instanceof BlockObject blockObject) {
             if (mc.gameMode.isDestroying()) {
@@ -63,7 +72,7 @@ public class TickStats {
                 }
 
                 progressMade += speed;
-                ticksElapsed++;
+                ticksElapsed = mc.player.tickCount - startBreak;
             }
 
             setTicksNeeded(blockObject);
