@@ -3,6 +3,7 @@ package pom.rewrite.mixin;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.MultiPlayerGameMode;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import org.spongepowered.asm.mixin.Final;
@@ -11,6 +12,8 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import pom.rewrite.PingOffsetMinerClient;
+import pom.rewrite.events.startBreak;
 import pom.rewrite.features.debug.HSMModern;
 import pom.rewrite.utility.Util;
 
@@ -42,5 +45,14 @@ public class ClientPlayerInteractionMixin {
                 cir.setReturnValue(true);
             }
         }
+    }
+
+    @Inject(at = @At("HEAD"), method = "startDestroyBlock")
+    private void startDestroyBlock(BlockPos pos, Direction direction, CallbackInfoReturnable<Boolean> cir) {
+        if (minecraft.player != null) {
+            startBreak event = new  startBreak(minecraft.player.tickCount);
+            PingOffsetMinerClient.EVENT_BUS.post(event);
+        }
+
     }
 }
