@@ -24,10 +24,7 @@ import pom.rewrite.config.ConfigHandler;
 import pom.rewrite.config.Feature;
 import pom.rewrite.config.settings.*;
 import pom.rewrite.features.PingOffsetMiner;
-import pom.rewrite.features.debug.CustomStats;
-import pom.rewrite.features.debug.HSMModern;
-import pom.rewrite.features.debug.Logging;
-import pom.rewrite.features.debug.Profiler;
+import pom.rewrite.features.debug.*;
 import pom.rewrite.features.gui.EfficiencyDisplay;
 import pom.rewrite.features.gui.TickDisplay;
 import pom.rewrite.features.render.HighlightRender;
@@ -83,9 +80,6 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
                         new Module(new FeatureToggle("", PingOffsetMiner.instance),
                                 "Toggles Ping Offset Miner"
                                 ),
-                        new Module(new Toggle("", PingOffsetMiner.precisionMining),
-                                "Toggles Precision Mining Boost (+30% speed)"
-                                ),
                         new GroupLayout("Outline",
                                 new Module(
                                         new FeatureToggle("", OutlineRender.instance),
@@ -125,6 +119,9 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
                                         new Toggle("", HighlightRender.depthToggle),
                                         "Depth testing"
                                 )
+                        ),
+                        new Module(new FeatureToggle("", PrecisionMining.precisionMining),
+                                "Toggles Precision Mining Boost (+30% speed)"
                         ),
                         new Module(new FeatureToggle("", ProgressRender.instance), "Toggles custom mining progress rendering"),
                         new GroupLayout("Mining Speed Boost",
