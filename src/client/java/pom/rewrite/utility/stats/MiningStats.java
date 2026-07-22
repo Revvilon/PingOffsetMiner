@@ -12,6 +12,7 @@ import net.minecraft.world.phys.Vec3;
 import pom.rewrite.events.clientTick;
 import pom.rewrite.events.packetReceived;
 import pom.rewrite.features.debug.CustomStats;
+import pom.rewrite.features.debug.PrecisionMining;
 import pom.rewrite.features.render.MsbRender;
 import pom.rewrite.utility.block.BlockData;
 import pom.rewrite.utility.block.BlockObject;
@@ -47,7 +48,7 @@ public class MiningStats {
     public void setMiningSpeed(int miningSpeed) { this.miningSpeed = miningSpeed; }
     public int getMiningSpeed() {
         int baseSpeed = CustomStats.instance.isEnabled() ? CustomStats.customSpeed.getInt() : miningSpeed;
-        if (pom.rewrite.features.PingOffsetMiner.precisionMining.getBool() && isAimingAtPrecisionParticle()) {
+        if (PrecisionMining.precisionMining.isEnabled() && isAimingAtPrecisionParticle()) {
             return (int) (baseSpeed * 1.30);
         }
         return baseSpeed;
@@ -81,7 +82,7 @@ public class MiningStats {
 
     @EventHandler
     public void onTick(clientTick tick) {
-        if (!pom.rewrite.features.PingOffsetMiner.precisionMining.getBool()) {
+        if (!PrecisionMining.precisionMining.isEnabled()) {
             aimingAtPrecisionParticle = false;
             hasParticle = false;
             return;
@@ -126,7 +127,7 @@ public class MiningStats {
 
     @EventHandler
     public void onPacketReceived(packetReceived event) {
-        if (!pom.rewrite.features.PingOffsetMiner.precisionMining.getBool()) return;
+        if (!PrecisionMining.precisionMining.isEnabled()) return;
         if (event.value instanceof ClientboundLevelParticlesPacket packet) {
             Minecraft mc = Minecraft.getInstance();
             if (mc.level == null || mc.player == null) return;
