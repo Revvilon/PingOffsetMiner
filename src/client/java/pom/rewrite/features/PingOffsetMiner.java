@@ -5,5 +5,4 @@ import pom.rewrite.config.settings.SettingBoolean;
 
 public class PingOffsetMiner {
     public static final Feature instance = new Feature("pomEnabled", true);
-    public static final SettingBoolean precisionMining = new SettingBoolean(true, "precisionMining", instance);
 }
