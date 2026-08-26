@@ -13,4 +13,6 @@ public class CustomStats {
     public static final SettingInt extraSpeed = new SettingInt(855, "extraSpeed", instance);
     public static final SettingInt extraSpeedMetal = new SettingInt(0, "extraSpeedMetal", instance);
     public static final SettingInt extraSpeedOre = new SettingInt(0, "extraSpeedOre", instance);
+
+    public static final SettingInt tickMargin = new SettingInt(0, "tickMargin", instance);
 }
