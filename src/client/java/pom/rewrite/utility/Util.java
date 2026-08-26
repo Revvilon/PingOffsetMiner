@@ -15,6 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvent;
 import pom.rewrite.PingOffsetMinerClient;
+import pom.rewrite.features.debug.CustomStats;
 import pom.rewrite.features.debug.Logging;
 import pom.rewrite.utility.block.BlockObject;
 import pom.rewrite.utility.server.ServerStats;
@@ -97,27 +98,18 @@ public class Util {
         return "";
     }
 
-    public static int getTicksNeededProgress(int hardness, int miningSpeed, int ticksElapsed, double progressMade) {
+    public static int getTicksNeeded(int hardness, int miningSpeed) {
         if (miningSpeed <= 0) return 0;
-        if (miningSpeed >= hardness * 30 && ticksElapsed == 0) return 0;
+        if (miningSpeed >= hardness * 30) return 0;
 
-        double remainingProgress = Math.max(0.0, (hardness * 30.0) - progressMade);
-        double rawTicksNeeded = ticksElapsed + remainingProgress / miningSpeed;
+        int rawTicksNeeded = Util.getTicksNeededNoOffset(hardness, miningSpeed);
 
         double debugTps = ServerStats.getTps();
         double pingSec = ServerStats.getPing() / 1000.0;
 
-        double pingMath = rawTicksNeeded - pingSec * debugTps;
+        double pingMath = rawTicksNeeded - ((pingSec * debugTps)/2) + CustomStats.tickMargin.getInt();
 
-        double pingOffset = rawTicksNeeded - pingMath > pingMath
-                ? rawTicksNeeded - pingMath
-                : rawTicksNeeded;
-
-        return (int) Math.max(4, pingOffset);
-    }
-
-    public static int getTicksNeeded(int hardness, int miningSpeed) {
-        return getTicksNeededProgress(hardness, miningSpeed, 0, 0.0);
+        return (int) Math.max(4, pingMath);
     }
 
     public static int getTicksNeeded(BlockObject block, int miningSpeed) {
