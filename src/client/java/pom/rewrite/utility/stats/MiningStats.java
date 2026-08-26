@@ -11,6 +11,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import pom.rewrite.events.clientTick;
 import pom.rewrite.events.packetReceived;
+import pom.rewrite.features.PingOffsetMiner;
 import pom.rewrite.features.debug.CustomStats;
 import pom.rewrite.features.debug.PrecisionMining;
 import pom.rewrite.features.render.MsbRender;
@@ -164,7 +165,8 @@ public class MiningStats {
     }
 
     public boolean shouldRender() {
-        if (CustomStats.instance.isEnabled()) return true;
+        if (!PingOffsetMiner.instance.isEnabled()) return false;
+        if (CustomStats.instance.isEnabled() && BlockData.getInstance().getCurrentBlock() instanceof BlockObject) return true;
 
         if (!(BlockData.getInstance().getCurrentBlock() instanceof BlockObject) || !IslandUtils.isIsland() || TickStats.instance().ticksNeeded() <= 0) {
             return false;

@@ -25,7 +25,6 @@ public class TickStats {
 
     private int ticksNeeded = 0;
     private int ticksElapsed = 0;
-    private double progressMade = 0.0;
     private BlockPos tempPos;
     private int startBreak = 0;
 
@@ -62,16 +61,7 @@ public class TickStats {
 
         if (blockData.getCurrentBlock() instanceof BlockObject blockObject) {
             if (mc.gameMode.isDestroying()) {
-                int speed = miningStats.getMiningSpeed();
-                String id = blockObject.id;
 
-                if (id.contains("gem")) {
-                    speed += CustomStats.extraSpeed.getInt();
-                } else if (id.contains("skyblock")) {
-                    speed += CustomStats.extraSpeedMetal.getInt();
-                }
-
-                progressMade += speed;
                 ticksElapsed = mc.player.tickCount - startBreak;
             }
 
@@ -93,7 +83,7 @@ public class TickStats {
             speed += CustomStats.extraSpeedMetal.getInt();
         }
 
-        ticksNeeded = Util.getTicksNeededProgress(blockObject.hardness, speed, ticksElapsed, progressMade);
+        ticksNeeded = Util.getTicksNeeded(blockObject.hardness, speed);
     }
 
     public boolean timeoutExceeded() {
@@ -101,13 +91,14 @@ public class TickStats {
 
     }
 
-    public int ticksNeeded() { return this.ticksNeeded; }
+    public int ticksNeeded() {
+        return this.ticksNeeded;
+    }
 
     public int ticksElapsed() { return this.ticksElapsed; }
 
     private void reset() {
         this.ticksElapsed = 0;
-        this.progressMade = 0.0;
 
     }
 

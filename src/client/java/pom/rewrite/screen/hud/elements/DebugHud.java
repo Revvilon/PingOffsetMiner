@@ -83,7 +83,7 @@ public class DebugHud extends FlowLayout implements HudElement {
     }
 
     private boolean isEditing() {
-        return Minecraft.getInstance().screen instanceof HudEditScreen;
+        return Minecraft.getInstance().gui.screen() instanceof HudEditScreen;
     }
 
     private void clearLines() {

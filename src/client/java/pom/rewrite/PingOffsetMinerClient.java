@@ -38,6 +38,8 @@ public class PingOffsetMinerClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
 
+        System.setProperty("devauth.enabled", "true");
+
         ConfigHandler.load();
 
 

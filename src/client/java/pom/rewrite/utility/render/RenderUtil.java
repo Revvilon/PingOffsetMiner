@@ -4,15 +4,20 @@ package pom.rewrite.utility.render;
 import com.mojang.blaze3d.buffers.GpuBuffer;
 import com.mojang.blaze3d.buffers.GpuBufferSlice;
 import com.mojang.blaze3d.pipeline.RenderPipeline;
+import com.mojang.blaze3d.pipeline.RenderTarget;
 import com.mojang.blaze3d.systems.CommandEncoder;
 import com.mojang.blaze3d.systems.RenderPass;
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.blaze3d.textures.GpuTexture;
+import com.mojang.blaze3d.textures.GpuTextureView;
 import com.mojang.blaze3d.vertex.*;
 import io.wispforest.owo.ui.core.Color;
 import net.fabricmc.fabric.api.client.rendering.v1.level.LevelRenderContext;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MappableRingBuffer;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.phys.Vec3;
@@ -23,7 +28,18 @@ import org.joml.Vector3f;
 import org.joml.Vector4f;
 import org.lwjgl.system.MemoryUtil;
 
+import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.OptionalInt;
+
+//? if >= 26.2 {
+import com.mojang.blaze3d.PrimitiveTopology;
+import net.minecraft.client.renderer.StagedVertexBuffer;
+import oshi.jna.platform.mac.SystemB;
+import pom.rewrite.features.render.HighlightRender;
+import pom.rewrite.features.render.OutlineRender;
+//?}
+
 
 import static pom.rewrite.PingOffsetMinerClient.MOD_ID;
 
@@ -39,9 +55,151 @@ public class RenderUtil {
     private static final Matrix4f TEXTURE_MATRIX = new Matrix4f();
     private MappableRingBuffer vertexBuffer;
 
+    //? if >= 26.2 {
+
+    private record LineState(VoxelShape shape, BlockPos pos, Color color, float width) { }
+    private LineState renderState;
+    private record HighlightState(VoxelShape shape, BlockPos pos, Color color) { }
+    private HighlightState highlightState;
+    private final StagedVertexBuffer stagedBuffer = new StagedVertexBuffer(() -> "pom buffer", RenderType.SMALL_BUFFER_SIZE);
 
 
-    void renderOutline(LevelRenderContext context, VoxelShape shape, BlockPos pos, io.wispforest.owo.ui.core.Color color, double lineWidth, RenderPipeline renderPipeline) {
+    void renderOutline(LevelRenderContext context, VoxelShape shape, BlockPos pos, io.wispforest.owo.ui.core.Color color, double lineWidth, RenderPipeline pipeline) {
+        this.renderState = new LineState(shape, pos, color, (float) lineWidth);
+
+        VertexFormat formatBinding = pipeline.getVertexFormatBinding(0);
+        assert formatBinding != null;
+
+        PrimitiveTopology primitive = pipeline.getPrimitiveTopology();
+        StagedVertexBuffer.Draw draw = stagedBuffer.appendDraw(
+                formatBinding,
+                primitive,
+                primitive == PrimitiveTopology.QUADS ? RenderSystem.getProjectionType().vertexSorting() : null);
+
+        this.render(context, draw);
+
+        stagedBuffer.upload();
+
+        StagedVertexBuffer.ExecuteInfo info = stagedBuffer.getExecuteInfo(draw);
+
+        if (info != null) {
+            draw(Minecraft.getInstance(), info, pipeline);
+        }
+
+        stagedBuffer.endFrame();
+    }
+
+    public void renderHighlight(LevelRenderContext context, VoxelShape shape, BlockPos pos, Color color, RenderPipeline pipeline) {
+        this.highlightState = new HighlightState(shape, pos, color);
+        VertexFormat formatBinding = pipeline.getVertexFormatBinding(0);
+        assert formatBinding != null;
+
+        PrimitiveTopology primitive = pipeline.getPrimitiveTopology();
+        StagedVertexBuffer.Draw draw = stagedBuffer.appendDraw(
+                formatBinding,
+                primitive,
+                primitive == PrimitiveTopology.QUADS ? RenderSystem.getProjectionType().vertexSorting() : null
+        );
+
+        this.renderBox(context, draw);
+
+        stagedBuffer.upload();
+
+        StagedVertexBuffer.ExecuteInfo info = stagedBuffer.getExecuteInfo(draw);
+
+        if (info != null) {
+            draw(Minecraft.getInstance(), info, pipeline);
+        }
+
+        stagedBuffer.endFrame();
+    }
+
+    void renderBox(LevelRenderContext context, StagedVertexBuffer.Draw draw) {
+        BlockPos pos = this.highlightState.pos;
+        Color color = this.highlightState.color;
+
+        Vec3 camera = context.levelState().cameraRenderState.pos;
+
+        float originX = (float) (pos.getX() - camera.x);
+        float originY = (float) (pos.getY() - camera.y);
+        float originZ = (float) (pos.getZ() - camera.z);
+
+        PoseStack matrices = context.poseStack();
+        matrices.pushPose();
+        matrices.translate(originX, originY, originZ);
+
+        final var builder = stagedBuffer.getVertexBuilder(draw);
+
+        this.highlightState.shape.forAllBoxes((minX,  minY, minZ, maxX, maxY, maxZ) -> renderFilledBox(
+                matrices.last().pose(),
+                builder,
+                (float) minX, (float) minY, (float) minZ,
+                (float) maxX, (float) maxY, (float) maxZ,
+                color.red(), color.green(),  color.blue(),color.alpha()
+        ));
+
+        matrices.popPose();
+    }
+
+    void render(LevelRenderContext context, StagedVertexBuffer.Draw draw) {
+        BlockPos pos = this.renderState.pos;
+
+        Vec3 camera = context.levelState().cameraRenderState.pos;
+
+        float originX = (float) (pos.getX() - camera.x);
+        float originY = (float) (pos.getY() - camera.y);
+        float originZ = (float) (pos.getZ() - camera.z);
+
+        PoseStack matrices = context.poseStack();
+        matrices.pushPose();
+        matrices.translate(originX, originY, originZ);
+
+        final var builder = stagedBuffer.getVertexBuilder(draw);
+
+        this.renderState.shape.forAllEdges((minX, minY, minZ, maxX, maxY, maxZ) -> {
+           Vector3f start = new Vector3f((float) minX, (float) minY, (float) minZ);
+           Vector3f end = new Vector3f((float) maxX, (float) maxY, (float) maxZ);
+            renderLine(builder, matrices.last().pose(), start, end, this.renderState.color, (float) (this.renderState.width / 100));
+
+        });
+    }
+
+    private void draw(Minecraft client, StagedVertexBuffer.ExecuteInfo info, RenderPipeline pipeline) {
+        GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms()
+                .writeTransform(RenderSystem.getModelViewMatrixCopy(), COLOR_MODULATOR, MODEL_OFFSET, TEXTURE_MATRIX);
+
+        RenderTarget mainTarget = client.gameRenderer.mainRenderTarget();
+        GpuTextureView colorTexture = mainTarget.getColorTextureView();
+
+        assert colorTexture != null;
+
+        try (RenderPass renderPass = RenderSystem.getDevice()
+                .createCommandEncoder()
+                .createRenderPass(() ->
+                        MOD_ID + "pom rendering",
+                        colorTexture,
+                        Optional.empty(),
+                        mainTarget.getDepthTextureView(),
+                        OptionalDouble.empty()
+                )) {
+            renderPass.setPipeline(pipeline);
+
+            RenderSystem.bindDefaultUniforms(renderPass);
+            renderPass.setUniform("DynamicTransforms", dynamicTransforms);
+
+            renderPass.setVertexBuffer(0, info.vertexBuffer().slice());
+            renderPass.setIndexBuffer(info.indexBuffer(), info.indexType());
+
+            renderPass.drawIndexed(info.indexCount(), 1, info.firstIndex(), info.baseVertex(), 0);
+        }
+    }
+
+    public void close() {
+        stagedBuffer.close();
+    }
+
+    //? } else {
+    /* void renderOutline(LevelRenderContext context, VoxelShape shape, BlockPos pos, io.wispforest.owo.ui.core.Color color, double lineWidth, RenderPipeline renderPipeline) {
         PoseStack matrices = context.poseStack();
         Vec3 camera = context.levelState().cameraRenderState.pos;
 
@@ -72,7 +230,7 @@ public class RenderUtil {
         matrices.popPose();
     }
 
-    void renderHighlight(LevelRenderContext context, VoxelShape shape, BlockPos pos, Color color, RenderPipeline renderPipeline) {
+      void renderHighlight(LevelRenderContext context, VoxelShape shape, BlockPos pos, Color color, RenderPipeline renderPipeline) {
         PoseStack matrices = context.poseStack();
         Vec3 camera = context.levelState().cameraRenderState.pos;
 
@@ -178,7 +336,7 @@ public class RenderUtil {
 
     }
 
-    public void close() {
+     public void close() {
         allocator.close();
 
         if (vertexBuffer != null) {
@@ -187,9 +345,18 @@ public class RenderUtil {
         }
     }
 
+    */
+    //? }
+
+
+
+
+
 
     private void renderLine(VertexConsumer buffer, Matrix4f matrix, Vector3f start, Vector3f end, io.wispforest.owo.ui.core.Color color, float width) {
-        Camera camera = Minecraft.getInstance().gameRenderer.getMainCamera();
+
+        //~ if < 26.2 'mainCamera()' -> 'getMainCamera()'
+        Camera camera = Minecraft.getInstance().gameRenderer.mainCamera();
 
         Vector3f lineDir = new Vector3f(end).sub(start).normalize();
 
@@ -219,7 +386,7 @@ public class RenderUtil {
         buffer.addVertex(matrix, start.x() - side.x(), start.y() - side.y(), start.z() - side.z()).setColor(r, g, b, a);
         buffer.addVertex(matrix, start.x() + side.x(), start.y() + side.y(), start.z() + side.z()).setColor(r, g, b, a);
     }
-    private void renderFilledBox(Matrix4fc positionMatrix, BufferBuilder buffer, float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float red, float green, float blue, float alpha) {
+    private void renderFilledBox(Matrix4fc positionMatrix, VertexConsumer buffer, float minX, float minY, float minZ, float maxX, float maxY, float maxZ, float red, float green, float blue, float alpha) {
         // Front Face
         buffer.addVertex(positionMatrix, minX, minY, maxZ).setColor(red, green, blue, alpha);
         buffer.addVertex(positionMatrix, maxX, minY, maxZ).setColor(red, green, blue, alpha);

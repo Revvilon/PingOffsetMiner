@@ -47,7 +47,7 @@ public class EfficiencyHud extends FlowLayout implements HudElement {
     }
 
     private boolean isEditing() {
-        return Minecraft.getInstance().screen instanceof HudEditScreen;
+        return Minecraft.getInstance().gui.screen() instanceof HudEditScreen;
     }
 
     private Component uptimeLine(float uptime) {

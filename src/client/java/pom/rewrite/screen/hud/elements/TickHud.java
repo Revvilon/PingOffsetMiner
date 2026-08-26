@@ -50,8 +50,9 @@ public class TickHud extends FlowLayout implements HudElement {
         return Component.literal(tickString).withColor(color);
     }
 
+
     private boolean isEditing() {
-        return Minecraft.getInstance().screen instanceof HudEditScreen;
+        return Minecraft.getInstance().gui.screen() instanceof HudEditScreen;
     }
 
     @Override

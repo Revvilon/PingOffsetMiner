@@ -7,10 +7,15 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import pom.rewrite.features.debug.Logging;
+import pom.rewrite.features.render.OutlineRender;
 import pom.rewrite.screen.click.ClickGui;
 import pom.rewrite.screen.hud.HudEditScreen;
 import pom.rewrite.utility.Util;
+import pom.rewrite.utility.render.CustomPipelines;
+import pom.rewrite.utility.render.RenderUtil;
 import pom.rewrite.utility.server.ServerStats;
+
+import java.util.Optional;
 
 public class CommandHandler {
 
@@ -20,7 +25,7 @@ public class CommandHandler {
         dispatcher.register(ClientCommands.literal("pom")
                 .executes(context -> {
                     mc.execute(() -> {
-                        mc.setScreen(new ClickGui());
+                        mc.setScreenAndShow(new ClickGui());
                     });
                     return -1;
                 })
@@ -45,7 +50,7 @@ public class CommandHandler {
                 .then(ClientCommands.literal("hud")
                         .executes(context -> {
                             mc.execute(() -> {
-                                mc.setScreen(new HudEditScreen());
+                                mc.setScreenAndShow(new HudEditScreen());
                             });
                             return -1;
                         }))

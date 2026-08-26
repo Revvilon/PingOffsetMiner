@@ -48,12 +48,22 @@ public class RenderClass {
     }
 
     private static void extractAndDraw(LevelRenderContext context, VoxelShape shape, BlockPos pos, Color color, RenderPipeline renderPipeline) {
+        //? if >=26.2 {
         RenderUtil.instance.renderHighlight(context, shape, pos, color, renderPipeline);
-        RenderUtil.instance.draw(Minecraft.getInstance(), renderPipeline);
+        //?}
+        //? if <=26.1.2 {
+            //RenderUtil.instance.renderHighlight(context, shape, pos, color, renderPipeline);
+            //RenderUtil.instance.draw(Minecraft.getInstance(), renderPipeline);
+        //? }
     }
 
     private static void extractAndDraw(LevelRenderContext context, VoxelShape shape, BlockPos pos, Color color, double lineWidth, RenderPipeline renderPipeline) {
+        //? if >= 26.2 {
         RenderUtil.instance.renderOutline(context, shape, pos, color, lineWidth, renderPipeline);
-        RenderUtil.instance.draw(Minecraft.getInstance(), renderPipeline);
+        //? }
+        //? if <= 26.1.2 {
+        //RenderUtil.instance.renderOutline(context, shape, pos, color, lineWidth, renderPipeline);
+        //RenderUtil.instance.draw(Minecraft.getInstance(), renderPipeline);
+        //? }
     }
 }

@@ -67,7 +67,7 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
     @Override
     public void onClose() {
         ConfigHandler.saveAsync();
-        Minecraft.getInstance().setScreen(null);
+        Minecraft.getInstance().setScreenAndShow(null);
     }
 
     @Override
@@ -151,7 +151,7 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
                                 )
                 ),
                 new Tab("Hud",
-                            new Module(new CleanButton("Hud editor", button -> Minecraft.getInstance().setScreen(new HudEditScreen())), ""),
+                            new Module(new CleanButton("Hud editor", button -> Minecraft.getInstance().setScreenAndShow(new HudEditScreen())), ""),
                             new Module(new FeatureToggle("", EfficiencyDisplay.instance), "Toggles Efficiency Hud"),
                             new Module(new FeatureToggle("", Profiler.instance), "Toggles Ping and Tps Hud"),
                             new Module(new FeatureToggle("", TickDisplay.instance), "Toggles tick Hud"),
@@ -174,7 +174,8 @@ public class ClickGui extends BaseOwoScreen<FlowLayout> {
                         new GroupLayout("Miscellaneous",
                                     new Module(new IntInput("", CustomStats.extraSpeed), "Amount of extra speed applied to gemstones"),
                                 new Module(new IntInput("", CustomStats.extraSpeedMetal), "Amount of extra speed applied to metals"),
-                                new Module(new FeatureToggle("", HSMModern.instance), "Toggles HSM")
+                                new Module(new FeatureToggle("", HSMModern.instance), "Toggles HSM"),
+                                new Module(new SliderInt("Ticks", CustomStats.tickMargin, -10, 10, 1), "Amount of ticks to be added / reduced from the ticks needed stat")
                                 )
                 )
         );

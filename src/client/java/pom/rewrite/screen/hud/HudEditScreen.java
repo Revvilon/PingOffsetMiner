@@ -117,6 +117,6 @@ public class HudEditScreen extends BaseOwoScreen<FlowLayout> {
     @Override
     public void onClose() {
         ConfigHandler.saveAsync();
-        Minecraft.getInstance().setScreen(new ClickGui());
+        Minecraft.getInstance().setScreenAndShow(new ClickGui());
     }
 }
