@@ -15,6 +15,9 @@
 		],
 		"client": [
 			"pom.rewrite.PingOffsetMinerClient"
+		],
+		"preLaunch": [
+			"pom.rewrite.PingOffsetMinerPreLaunch"
 		]
 	},
 	"mixins": [
