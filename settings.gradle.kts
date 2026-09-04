@@ -24,6 +24,6 @@ stonecutter {
 	// Configuration goes here
 
 	create(rootProject) {
-		versions("26.1", "26.2")
+		versions("26.1.2", "26.2")
 	}
 }
